@@ -2,12 +2,14 @@
 
 A daily history puzzle. Each day shows one real object from The Met's Open Access collection as a tight close-up. Work out **where** it was made, **when**, and **what** it is, spending from a 100-point Insight budget.
 
-Play: https://elliotesmith18.github.io/relic/
+Play: https://relic.play2dgames.com/ (part of https://play2dgames.com/)
 
 - `index.html`: the whole game (HTML, CSS and JS in one file)
 - `puzzles.json`: the daily puzzles, one per start date. The game shows the newest one whose date has arrived in the player's time zone, and switches at local midnight.
 - `relics/` and `relic.jpg`: artifact images (public domain, The Metropolitan Museum of Art)
 - `countries-110m.json`: world map data from [world-atlas](https://github.com/topojson/world-atlas) (Natural Earth, public domain)
+- `consent.js`: shared cookie banner (same file as on play2dgames.com)
+- `fonts.css`, `fonts/`, `vendor/`: self-hosted fonts and d3/topojson, so no third-party CDNs see players
 - `og-image.jpg`: share preview image (a tight crop, so it does not spoil the answer)
 - `relic.html`: the same game in the format used for the Claude artifact version
 

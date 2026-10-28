@@ -1,8 +1,6 @@
 <title>Relic</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<link rel="stylesheet" href="fonts.css">
 <style>
 /* Layout: a pixel-art world map at night fills the screen. The relic hangs top-left as an exhibit card.
    Where = tap the map (slim bar at the bottom). Solving it zooms to the country and slides up the When/What panel. */
@@ -244,6 +242,9 @@ b { font-weight: 400; color: var(--butter); }
 .row-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .row-btns a { color: var(--cyan); margin-left: auto; font-family: var(--font-label); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
 .price-table td.n { width: 120px; }
+.site-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 16px; padding-top: 12px; border-top: 2px dashed var(--line); font-family: var(--font-label); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.site-links a, .site-links button { color: var(--ink-soft); text-decoration: none; background: none; border: 0; padding: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.site-links a:hover, .site-links button:hover { color: var(--cyan); }
 .light-photo { width: min(78vw, 440px); aspect-ratio: 3/4; max-width: 100%; position: relative; overflow: hidden; border: 8px solid var(--panel); box-shadow: 0 0 0 2px var(--frame), var(--drop); background: #1a2546; }
 .light-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; }
 
@@ -346,8 +347,9 @@ b { font-weight: 400; color: var(--butter); }
   <div id="modalRoot"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script src="vendor/d3.v7.9.0.min.js"></script>
+<script src="vendor/topojson-client.3.1.0.min.js"></script>
+<script src="consent.js"></script>
 <script>
 "use strict";
 
@@ -1210,6 +1212,7 @@ function commitWhat() {
    score_dist() returns only counts per score. Leave these blank and the score sheet says it isn't connected. */
 const SUPABASE_URL = "https://egbslxashosoijayytrm.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnYnNseGFzaG9zb2lqYXl5dHJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxOTM3MjIsImV4cCI6MjEwODc2OTcyMn0.5Rge7-oRmpoNxad_xGv-D2uWp7BdrFRMhrW1H3s8_OI";   // the project's public "anon" key, meant to be used in browsers
+const HOME_URL = "https://play2dgames.com/";
 const SCORE_MAX = 130, BIN = 10;
 function playerId() {
   try {
@@ -1341,7 +1344,8 @@ function showHelp() {
     <table class="price-table">${rows.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join("")}</table>
     <p><b>Hints.</b> Your first hint of the game is free. After that, hints cost Insight. <b>First try.</b> Solve Where or When on your first guess for +5 Insight.</p>
     <p><b>Bonuses.</b> +3 for every zoom level you never revealed, and +5 for the find-spot. Run out of Insight and you can keep playing for free, but the score drops to 0.</p>
-    <div class="row-btns"><button class="btn btn-primary" id="startBtn">${state.where.guesses.length ? "Back to the dig" : "Start digging"}</button></div></div>`,
+    <div class="row-btns"><button class="btn btn-primary" id="startBtn">${state.where.guesses.length ? "Back to the dig" : "Start digging"}</button></div>
+    <div class="site-links"><a href="${HOME_URL}">More games</a><a href="${HOME_URL}privacy.html">Privacy</a><button type="button" data-consent-open>Cookie settings</button></div></div>`,
     () => { if (!state.seenHelp) { state.seenHelp = true; save(); } });
   $("#startBtn").addEventListener("click", close);
 }
