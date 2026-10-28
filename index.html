@@ -275,6 +275,20 @@ b { font-weight: 400; color: var(--butter); }
 .free-badge, .notes-btn { font-family: var(--font-num); font-size: 17px; }
 .wb-prompt .t { font-family: var(--font-num); font-size: 22px; letter-spacing: .04em; }
 
+/* score distribution */
+.dist { margin: 4px 0 16px; padding: 12px; background: var(--dark-ink); border: 2px solid var(--line); }
+.dist-msg { color: var(--ink-soft); margin: 0 !important; }
+.dist-head { font-size: 22px; margin: 0 0 18px !important; }
+.dist-chart { display: grid; grid-template-columns: repeat(14, 1fr); gap: 2px; height: 120px; padding-top: 18px; align-items: end; border-bottom: 2px solid var(--line-2); }
+.dist-col { position: relative; height: 100%; display: flex; align-items: flex-end; cursor: default; }
+.dist-col i { display: block; width: 100%; background: var(--line-2); }
+.dist-col:hover i { background: var(--ink-faint); }
+.dist-col.me i { background: var(--butter); }
+.dist-col.me i:empty { min-height: 4px; }
+.dist-col .you { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--font-label); font-size: 9px; color: var(--butter); letter-spacing: .1em; }
+.dist-axis { display: grid; grid-template-columns: repeat(14, 1fr); gap: 2px; margin-top: 4px; }
+.dist-axis span { font-family: var(--font-num); font-size: 16px; color: var(--ink-soft); }
+
 /* ---------- Narrower desktops: where bar on two rows ---------- */
 @media (max-width: 1179px) {
   .wherebar { width: min(760px, calc(100% - 32px)); grid-template-columns: minmax(0, 1fr) 220px; grid-template-areas: "status search" "hints hints"; }
@@ -438,7 +452,7 @@ function freshState() {
     where: { guesses: [], solved: false },
     when: { guesses: [], lo: -3000, hi: 2025, cur: 1000, solved: false },
     what: { step: "fn", fnWrong: [], fnSolved: false, idWrong: [], elim: false, solved: false },
-    used: {}, free: { when: false, what: false }, notes: [], momentum: {}, seenHelp: false
+    used: {}, freeHint: true, notes: [], momentum: {}, seenHelp: false
   };
 }
 let state;
@@ -873,19 +887,19 @@ function renderStepper(ripple) {
 }
 
 /* ================= Hints + notes ================= */
-function hintPrice(h) { return state.bankrupt ? 0 : (state.free[state.phase] ? 0 : h.price); }
+function hintPrice(h) { return state.bankrupt || state.freeHint ? 0 : h.price; }
 function renderHints() {
   const inBar = state.phase === "where", box = inBar ? $("#barHints") : $("#hintBox");
   if (!inBar) $("#hintBox").innerHTML = "";
   if (!box || state.phase === "done") return;
-  const free = state.free[state.phase] && !state.bankrupt;
+  const free = state.freeHint && !state.bankrupt;
   const btns = HINTS[state.phase].map(h => {
     const done = !h.repeat && state.used[h.id];
     const blocked = (h.id === "zoom" && state.zoom === 0) || (h.needsStep && state.what.step !== h.needsStep);
     const p = hintPrice(h);
     return `<button class="hint" data-h="${h.id}" ${done || blocked ? "disabled" : ""}><span>${h.label}</span><span class="p ${p === 0 ? "free" : ""}">${done ? "used" : p === 0 ? "free" : "−" + p}</span></button>`;
   }).join("");
-  box.innerHTML = inBar ? btns : `<div class="section-label"><span>Hints</span>${free ? '<span class="free-badge">1 free hint</span>' : ""}</div><div class="hints">${btns}</div>`;
+  box.innerHTML = inBar ? btns : `<div class="section-label"><span>Hints</span>${free ? '<span class="free-badge">First hint free</span>' : ""}</div><div class="hints">${btns}</div>`;
   box.querySelectorAll(".hint").forEach(b => b.addEventListener("click", () => useHint(b.dataset.h)));
 }
 function notesHtml() {
@@ -899,7 +913,7 @@ function renderNotes() {
 function useHint(id) {
   const h = HINTS[state.phase].find(x => x.id === id); if (!h) return;
   const p = hintPrice(h);
-  if (state.free[state.phase] && !state.bankrupt) state.free[state.phase] = false;
+  if (!state.bankrupt) state.freeHint = false;
   spend(p); state.hintsUsed++;
   if (id === "zoom") { zoomOut(); }
   else {
@@ -1021,8 +1035,7 @@ function finishPhase(from, to, n) {
   state.momentum[from] = n;
   let msg = "";
   if (to && to !== "done" && !state.bankrupt) {
-    if (n === 1) { gain(5); state.free[to] = true; msg = "First try! +5 Insight and a free hint in the next phase"; }
-    else if (n === 2) { state.free[to] = true; msg = "Momentum: your next phase starts with a free hint"; }
+    if (n === 1) { gain(5); msg = "First try! +5 Insight"; }
   }
   if (from !== "where") { renderStepper(from); renderHints(); }
   save();
@@ -1209,6 +1222,71 @@ function commitWhat() {
   renderStepper(); save();
 }
 
+/* ================= Global scores (Supabase) =================
+   Each finished first play posts one row (puzzle, anonymous player id, score). Raw rows aren't readable;
+   score_dist() returns only counts per score. Leave these blank and the score sheet says it isn't connected. */
+const SUPABASE_URL = "";
+const SUPABASE_KEY = "";   // the project's public "anon" key, meant to be used in browsers
+const SCORE_MAX = 130, BIN = 10;
+function playerId() {
+  try {
+    let id = localStorage.getItem("relic-player");
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem("relic-player", id); }
+    return id;
+  } catch (e) { return null; }
+}
+function sb(path, body, prefer) {
+  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", ...(prefer ? { Prefer: prefer } : {}) },
+    body: JSON.stringify(body)
+  }).then(r => { if (!r.ok) throw new Error(r.status); return r.status === 204 ? null : r.json(); });
+}
+async function submitScore() {
+  if (!SUPABASE_URL || state.practice || state.submitted) return;
+  const id = playerId(); if (!id) return;
+  try {
+    await sb("scores?on_conflict=puzzle_no,player_id", { puzzle_no: PUZZLE.no, player_id: id, score: score().total }, "resolution=ignore-duplicates,return=minimal");
+    state.submitted = true; save();
+  } catch (e) {}
+}
+async function loadDistribution(mine) {
+  const box = $("#dist"); if (!box) return;
+  const msg = t => { box.innerHTML = `<div class="eyebrow">Today's players</div><p class="dist-msg">${t}</p>`; };
+  if (!SUPABASE_URL) { msg("Global scores aren't connected yet. Once they are, you'll see how you compare with everyone who played today."); return; }
+  await submitScore();
+  let rows;
+  try { rows = await sb("rpc/score_dist", { p_no: PUZZLE.no }); } catch (e) { msg("Couldn't load today's scores. Try again later."); return; }
+  if (!$("#dist")) return;
+  renderDistribution(rows.map(r => ({ score: +r.score, n: +r.n })), mine);
+}
+function renderDistribution(rows, mine) {
+  const bins = Array.from({ length: SCORE_MAX / BIN + 1 }, (_, i) => ({ lo: i * BIN, n: 0 }));
+  let total = 0, below = 0, same = 0;
+  for (const { score: sc, n } of rows) {
+    bins[Math.min(bins.length - 1, Math.floor(Math.max(0, sc) / BIN))].n += n;
+    total += n; if (sc < mine) below += n; else if (sc === mine) same += n;
+  }
+  const others = total - (state.practice ? 0 : 1);
+  // Percentile: players you beat, plus half of any ties (not counting yourself).
+  const pct = others > 0 ? Math.round(100 * (below + Math.max(0, same - 1) / 2) / others) : null;
+  const myBin = Math.min(bins.length - 1, Math.floor(mine / BIN)), peak = Math.max(1, ...bins.map(b => b.n));
+  $("#dist").innerHTML = `<div class="eyebrow">Today's players · ${total.toLocaleString("en-US")}</div>
+    <p class="dist-head">${pct === null ? "You're the first to finish today." : `Better than <b>${pct}%</b> of today's players`}</p>
+    <div class="dist-chart" role="img" aria-label="Score distribution. Your score ${mine} is in the ${myBin * BIN} to ${myBin * BIN + BIN - 1} range.">
+      ${bins.map((b, i) => { const h = b.n ? Math.max(4, Math.round(b.n / peak * 100)) : 0; return `<div class="dist-col${i === myBin ? " me" : ""}" data-tip="${b.lo}${i === bins.length - 1 ? "+" : "–" + (b.lo + BIN - 1)}: ${b.n} player${b.n === 1 ? "" : "s"}">
+        ${i === myBin ? `<span class="you" style="bottom:calc(${h}% + 4px)">YOU</span>` : ""}<i style="height:${h}%"></i></div>`; }).join("")}
+    </div>
+    <div class="dist-axis">${bins.map((b, i) => `<span>${i % 2 === 0 ? b.lo : ""}</span>`).join("")}</div>
+    <table class="dist-table" hidden>${bins.map(b => `<tr><td>${b.lo}–${b.lo + BIN - 1}</td><td class="n">${b.n}</td></tr>`).join("")}</table>`;
+  const tip = $("#tip");
+  $("#dist").querySelectorAll(".dist-col").forEach(c => {
+    c.addEventListener("pointerenter", e => { tip.hidden = false; tip.style.zIndex = 40; tip.textContent = c.dataset.tip; });
+    c.addEventListener("pointermove", e => { tip.style.left = (e.clientX + 12) + "px"; tip.style.top = (e.clientY - 30) + "px"; });
+    c.addEventListener("pointerleave", () => { tip.hidden = true; });
+  });
+}
+
 /* ================= Done / reveal ================= */
 function score() {
   if (state.bankrupt) return { total: 0, parts: [] };
@@ -1240,6 +1318,7 @@ function showReveal() {
       <div><div class="eyebrow">Relic #${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.dateText}</div>
       <h2>${esc(r.title)}</h2>
       <div class="score-big">${s.total}</div><div class="rank">${emo} ${esc(name)}</div></div></div>
+    <section class="dist" id="dist" aria-label="Today's score distribution"><div class="eyebrow">Today's players</div><p class="dist-msg">Loading scores...</p></section>
     ${r.story.map(p => `<p>${esc(p)}</p>`).join("")}
     <table>${r.facts.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("")}</table>
     ${s.parts.length ? `<div class="eyebrow">Score</div><table>${s.parts.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="n">${v}</td></tr>`).join("")}<tr><td>Total</td><td class="n">${s.total}</td></tr></table>` : ""}
@@ -1254,6 +1333,7 @@ function showReveal() {
     });
   });
   $("#replayBtn").addEventListener("click", resetGame);
+  loadDistribution(s.total);
 }
 function modal(html, onClose) {
   const root = $("#modalRoot");
@@ -1273,7 +1353,7 @@ function showHelp() {
     <p><b>1. Where.</b> Drag to spin the globe, and scroll or pinch to zoom. Tap a country, then tap it again (or press Guess) to lock it in. Misses light up by how close they were. <b>2. When.</b> Find the right country and the map zooms in. Slide the timeline to the year it was made. <b>3. What.</b> Pick its function, then which object it is.</p>
     <p>You start with <b>100 Insight</b>. Guesses and hints spend it. Every miss pulls the photo back one step. Whatever Insight is left becomes your score.</p>
     <table class="price-table">${rows.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join("")}</table>
-    <p><b>Momentum.</b> Solve a phase on your first guess for +5 Insight and a free hint in the next phase. On your second guess, just the free hint.</p>
+    <p><b>Hints.</b> Your first hint of the game is free. After that, hints cost Insight. <b>First try.</b> Solve Where or When on your first guess for +5 Insight.</p>
     <p><b>Bonuses.</b> +3 for every zoom level you never revealed, and +5 for the find-spot. Run out of Insight and you can keep playing for free, but the score drops to 0.</p>
     <div class="row-btns"><button class="btn btn-primary" id="startBtn">${state.where.guesses.length ? "Back to the dig" : "Start digging"}</button></div></div>`,
     () => { if (!state.seenHelp) { state.seenHelp = true; save(); } });
@@ -1293,7 +1373,7 @@ function showLightbox() {
 }
 function resetGame() {
   const seen = state.seenHelp;
-  state = freshState(); state.seenHelp = seen; save();
+  state = freshState(); state.seenHelp = seen; state.practice = true; save();
   $("#modalRoot").innerHTML = "";
   shownInsight = 100; tweenInsight();
   selectedCountry = null; map.focused = false; map.anim = {};
@@ -1334,6 +1414,7 @@ async function start(data) {
   PUZZLE.dateText = dateLabel(PUZZLE.date);
   STORE_KEY = "relic-" + PUZZLE.no;
   state = (data && data.state && data.no === PUZZLE.no && data.state) || load() || freshState();
+  if (state.freeHint === undefined) { state.freeHint = !state.hintsUsed; delete state.free; }
   shownInsight = state.insight;
   $("#relicImg").src = PUZZLE.image;
   $("#issue").textContent = `No. ${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.dateText}`;
