@@ -2,267 +2,315 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&family=VT323&display=swap">
 <style>
-/* Layout: a full-bleed vintage atlas is the stage; the relic floats on it as a taped polaroid, and a docked field console runs the three phases. */
+/* Layout: a pixel-art world map at night fills the screen. The relic hangs top-left as an exhibit card.
+   Where = tap the map (slim bar at the bottom). Solving it zooms to the country and slides up the When/What panel. */
 :root {
-  color-scheme: light;
-  --paper: #f6f0e2;
-  --paper-2: #efe6d1;
-  --sea: #d3e3e4;
-  --sea-line: #bcd2d4;
-  --land: #e9dfc6;
-  --land-2: #e4d8bc;
-  --land-3: #ede5d0;
-  --ink: #3a3946;
-  --ink-soft: #6c6878;
-  --ink-faint: #a49f97;
-  --accent: #4d7a86;
-  --accent-ink: #f8f4ea;
-  --rose: #e9b7b1;
-  --sage: #b3cfa9;
-  --sage-deep: #6f9a62;
-  --butter: #f1db97;
-  --peach: #f4bf95;
-  --coral: #e98d7d;
-  --lavender: #c8c1e4;
-  --shadow: 0 1px 2px rgba(58,57,70,.08), 0 8px 28px rgba(58,57,70,.12);
-  --font-display: "Young Serif", "Iowan Old Style", Georgia, serif;
-  --font-ui: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+  --space: #070e22;
+  --panel: #0e1a39;
+  --panel-2: #15244b;
+  --line: #2a3b6a;
+  --line-2: #3d5491;
+  --frame: #5fb4c9;
+  --cyan: #8fe3f0;
+  --pink: #ff8fb8;
+  --ink: #f3ecdc;
+  --ink-soft: #a9b4d3;
+  --ink-faint: #6878a6;
+  --dark-ink: #141a2e;
+  --butter: #f6d36b;
+  --mint: #7fe0a6;
+  --peach: #f7a46b;
+  --coral: #ef6b6b;
+  --lavender: #8f9cf0;
+  --drop: 4px 4px 0 #030816;
+  --font-display: "Pixelify Sans", ui-monospace, monospace;
+  --font-label: "Silkscreen", ui-monospace, monospace;
+  --font-ui: "VT323", ui-monospace, "SF Mono", Menlo, monospace;
   --ease: cubic-bezier(.2,.8,.2,1);
 }
+*, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; }
-body { background: var(--sea); color: var(--ink); font-family: var(--font-ui); font-size: 15px; overflow: hidden; }
-button { font: inherit; color: inherit; }
-*:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+body { background: var(--space); color: var(--ink); font-family: var(--font-ui); font-size: 20px; line-height: 1.15; overflow: hidden; -webkit-font-smoothing: none; }
+button, input { font: inherit; color: inherit; }
+*:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+b { font-weight: 400; color: var(--butter); }
 
 #app { position: fixed; inset: 0; }
 
 /* ---------- Map ---------- */
-#map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+#map { position: absolute; left: 0; top: 0; display: block; cursor: grab; touch-action: none; image-rendering: crisp-edges; image-rendering: pixelated; }
 #map:active { cursor: grabbing; }
-.sphere { fill: var(--sea); }
-.graticule { fill: none; stroke: var(--sea-line); stroke-width: .6; vector-effect: non-scaling-stroke; }
-.country { stroke: #b9ab8c; stroke-width: .55; vector-effect: non-scaling-stroke; transition: fill .6s var(--ease), opacity .6s var(--ease); cursor: pointer; }
-.country:hover { filter: brightness(.97); }
-.country.dim { opacity: .35; }
-.country.sel { stroke: var(--ink); stroke-width: 1.6; }
-.country.guessed { stroke: #8f7f63; }
-.ring { fill: rgba(77,122,134,.06); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 5 5; vector-effect: non-scaling-stroke; animation: dash 18s linear infinite; }
-@keyframes dash { to { stroke-dashoffset: -200; } }
-.glabel { font-family: var(--font-ui); font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
-.ripple { fill: none; stroke: var(--sage-deep); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.pin-body { fill: var(--coral); stroke: var(--ink); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.pin-dot { fill: var(--paper); }
+#map.over { cursor: pointer; }
+.fx { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.13) 0 1px, transparent 1px 3px), radial-gradient(ellipse at center, transparent 58%, rgba(2,5,15,.6) 100%); }
+.tw { position: absolute; width: 3px; height: 3px; background: var(--cyan); opacity: 0; animation: tw 5s steps(5) infinite; }
+@keyframes tw { 50% { opacity: .55; } }
+#mlabels { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.mlabel { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 5px; white-space: nowrap; font-family: var(--font-label); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; background: var(--panel); color: var(--ink); border: 2px solid var(--line-2); padding: 1px 5px 2px; box-shadow: 2px 2px 0 #030816; }
+.mlabel i { width: 7px; height: 7px; flex: none; }
+.mlabel b { color: var(--ink-soft); }
+.mlabel.win { border-color: var(--mint); }
+.tip { position: absolute; z-index: 3; pointer-events: none; font-family: var(--font-label); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; background: var(--dark-ink); color: var(--ink); border: 2px solid var(--frame); padding: 2px 6px; white-space: nowrap; }
+
+/* ---------- Boxes + buttons ---------- */
+.box { background: var(--panel); border: 2px solid var(--frame); box-shadow: var(--drop); }
+.btn { height: 42px; border: 2px solid var(--line-2); background: var(--panel-2); padding: 0 14px; font-family: var(--font-label); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; white-space: nowrap; transition: transform .12s, opacity .2s; }
+.btn:active { transform: translate(2px, 2px); }
+.btn-primary { background: var(--butter); color: var(--dark-ink); border-color: var(--dark-ink); box-shadow: inset -3px -3px 0 rgba(0,0,0,.18), 3px 3px 0 #030816; }
+.btn-primary:active { box-shadow: inset -3px -3px 0 rgba(0,0,0,.18), 1px 1px 0 #030816; }
+.btn-primary:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+.btn .cost { opacity: .7; margin-left: 8px; }
+.btn-ghost { color: var(--ink); }
+.pulse { animation: pulse 1.4s steps(2) infinite; }
+@keyframes pulse { 50% { box-shadow: inset -3px -3px 0 rgba(0,0,0,.18), 3px 3px 0 #030816, 0 0 0 3px var(--cyan); } }
 
 /* ---------- Top bar ---------- */
 .topbar {
   position: absolute; top: 0; left: 0; right: 0; z-index: 5;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: 10px;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: 6px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   pointer-events: none;
 }
 .topbar > * { pointer-events: auto; }
-.brand { display: flex; align-items: baseline; gap: 10px; background: var(--paper); padding: 6px 14px 7px; border-radius: 999px; box-shadow: var(--shadow); }
-.brand h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: .01em; }
-.brand .issue { font-family: var(--font-data); font-size: 11.5px; color: var(--ink-soft); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-.right-tools { display: flex; align-items: center; gap: 8px; }
-.insight { position: relative; display: flex; align-items: center; gap: 10px; background: var(--paper); padding: 6px 14px 6px 8px; border-radius: 999px; box-shadow: var(--shadow); }
-.coin { width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fbeab5, var(--butter) 55%, #d9bd6a); border: 1.5px solid #c9a94f; display: grid; place-items: center; font-family: var(--font-display); font-size: 13px; color: #7a6223; }
-.insight .num { font-family: var(--font-data); font-weight: 500; font-size: 18px; font-variant-numeric: tabular-nums; min-width: 3ch; text-align: right; }
-.insight .lbl { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
-.insight .bar { width: 64px; height: 6px; border-radius: 3px; background: var(--paper-2); overflow: hidden; }
-.insight .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--peach), var(--butter)); border-radius: 3px; transition: width .6s var(--ease); }
-.insight.broke .bar i { background: var(--rose); }
-.floater { position: absolute; right: 14px; top: 100%; font-family: var(--font-data); font-weight: 500; font-size: 14px; pointer-events: none; animation: floatUp 1.1s var(--ease) forwards; }
-.floater.minus { color: #b4574a; } .floater.plus { color: var(--sage-deep); }
-@keyframes floatUp { from { opacity: 0; transform: translateY(-6px); } 20% { opacity: 1; } to { opacity: 0; transform: translateY(18px); } }
-.iconbtn { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--paper); box-shadow: var(--shadow); cursor: pointer; font-family: var(--font-display); font-size: 17px; }
+.brand { display: flex; align-items: baseline; gap: 14px; }
+.brand h1 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 34px; letter-spacing: .08em; color: var(--ink); text-shadow: -2px 0 var(--pink), 2px 0 var(--cyan), 0 4px 0 #030816; }
+.brand .issue { font-family: var(--font-label); font-size: 11px; color: var(--cyan); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+.right-tools { display: flex; align-items: center; gap: 10px; }
+.insight { position: relative; display: flex; align-items: center; gap: 9px; padding: 5px 12px 5px 8px; }
+.insight svg { display: block; }
+.insight .num { font-family: var(--font-display); font-weight: 600; font-size: 24px; min-width: 3ch; text-align: right; color: var(--butter); font-variant-numeric: tabular-nums; }
+.insight .lbl { font-family: var(--font-label); font-size: 10px; letter-spacing: .12em; color: var(--ink-soft); }
+.insight .bar { display: flex; gap: 2px; }
+.insight .bar i { width: 6px; height: 12px; background: var(--line); }
+.insight .bar i.on { background: var(--butter); }
+.insight.low .bar i.on { background: var(--peach); }
+.insight.broke .bar i.on, .insight.broke .bar i { background: var(--coral); opacity: .5; }
+.floater { position: absolute; right: 10px; top: 100%; font-family: var(--font-display); font-size: 18px; pointer-events: none; animation: floatUp 1.1s steps(8) forwards; text-shadow: 2px 2px 0 #030816; }
+.floater.minus { color: var(--coral); } .floater.plus { color: var(--mint); }
+@keyframes floatUp { from { opacity: 0; transform: translateY(-4px); } 20% { opacity: 1; } to { opacity: 0; transform: translateY(20px); } }
+.iconbtn { width: 42px; height: 42px; cursor: pointer; font-family: var(--font-display); font-size: 22px; color: var(--cyan); padding: 0; }
 
-/* ---------- Polaroid ---------- */
-.polaroid {
-  position: absolute; z-index: 4; margin: 0;
-  top: calc(70px + env(safe-area-inset-top, 0px)); left: max(20px, calc(env(safe-area-inset-left, 0px) + 12px));
-  width: 250px; max-width: 100%; background: #fffdf7; padding: 10px 10px 0; box-shadow: var(--shadow);
-  transform: rotate(-2.2deg); transition: transform .5s var(--ease); cursor: zoom-in; border: 0;
-}
-.polaroid:hover { transform: rotate(-1deg) translateY(-2px); }
-.polaroid::before { content: ""; position: absolute; top: -10px; left: 50%; width: 84px; height: 22px; transform: translateX(-50%) rotate(3deg); background: rgba(241,219,151,.75); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
-.photo { position: relative; aspect-ratio: 3 / 4; max-width: 100%; overflow: hidden; background: #ddd8cf; }
+/* ---------- Exhibit card ---------- */
+.relic-card { position: absolute; z-index: 4; top: calc(68px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); width: 236px; padding: 10px; }
+.card-head { display: flex; align-items: center; gap: 8px; font-family: var(--font-label); font-size: 10px; letter-spacing: .14em; color: var(--cyan); text-transform: uppercase; margin-bottom: 8px; white-space: nowrap; }
+.card-head::after { content: ""; flex: 1; border-top: 2px dashed var(--line-2); }
+.photo { position: relative; display: block; width: 100%; aspect-ratio: 3 / 4; overflow: hidden; background: #1a2546; border: 2px solid var(--dark-ink); padding: 0; cursor: zoom-in; }
 .photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 50%; transition: transform 1s var(--ease); max-width: none; }
-.polaroid figcaption { display: flex; justify-content: space-between; align-items: center; padding: 9px 2px 11px; font-family: var(--font-data); font-size: 11.5px; color: var(--ink-soft); letter-spacing: .03em; }
+.card-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-family: var(--font-label); font-size: 10px; letter-spacing: .12em; color: var(--ink-soft); }
 .zoompips { display: flex; gap: 3px; }
-.zoompips i { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); transition: background .4s; }
-.zoompips i.off { background: #d9d2c4; }
+.zoompips i { width: 8px; height: 8px; background: var(--butter); }
+.zoompips i.off { background: var(--line); }
+.notes-btn { display: none; height: 22px; padding: 0 6px; border: 2px solid var(--butter); background: transparent; color: var(--butter); font-family: var(--font-label); font-size: 9px; cursor: pointer; }
+.notes { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.notes:empty { display: none; }
+.note { background: var(--panel-2); border-left: 4px solid var(--butter); padding: 6px 8px; font-size: 17px; line-height: 1.1; animation: rowIn .4s steps(4); }
+.note .k { display: block; font-family: var(--font-label); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--butter); margin-bottom: 2px; }
+.broke-banner { background: #3a1830; border-left: 4px solid var(--coral); padding: 6px 8px; font-size: 17px; line-height: 1.1; }
 
-/* ---------- Console ---------- */
-.console {
-  position: absolute; z-index: 6; right: max(16px, env(safe-area-inset-right, 0px));
-  top: calc(70px + env(safe-area-inset-top, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  width: 384px; max-width: calc(100% - 32px); display: flex; flex-direction: column;
-  background: var(--paper); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden;
+/* ---------- Where bar ---------- */
+.wherebar {
+  position: absolute; z-index: 6; left: 50%; transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(1240px, calc(100% - 32px));
+  display: grid; grid-template-columns: minmax(260px, 1fr) 200px auto; grid-template-areas: "status search hints"; gap: 10px; align-items: center; padding: 10px;
+  animation: barIn .45s steps(6);
 }
-.console-scroll { overflow-y: auto; padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0; }
-.stepper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 14px 18px 0; }
-.chip { position: relative; border-radius: 12px; padding: 8px 10px 9px; background: var(--paper-2); color: var(--ink-faint); transition: background .4s var(--ease), color .4s; overflow: hidden; min-width: 0; }
-.chip b { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
-.chip span { display: block; font-size: 12.5px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chip.active { background: var(--ink); color: var(--paper); }
-.chip.solved { background: var(--sage); color: var(--ink); }
-.chip.solved.helped { background: var(--rose); }
-.chip .rip { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: rgba(255,255,255,.7); animation: chipRip .9s var(--ease) forwards; }
-@keyframes chipRip { to { transform: scale(30); opacity: 0; } }
+@keyframes barIn { from { opacity: 0; transform: translate(-50%, 16px); } }
+.wb-status { grid-area: status; display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 42px; }
+.wb-search { grid-area: search; }
+.wb-hints { grid-area: hints; }
+.wherebar .wb-hints { grid-template-columns: repeat(4, max-content); }
+.wb-prompt { display: flex; flex-direction: column; min-width: 0; }
+.wb-prompt .t { font-family: var(--font-label); font-size: 13px; letter-spacing: .08em; color: var(--ink); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wb-prompt .s { font-size: 18px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.heat-chip { display: inline-block; min-width: 46px; text-align: center; padding: 2px 6px; color: var(--dark-ink); font-family: var(--font-label); font-size: 12px; }
+.arrow { display: inline-block; color: var(--cyan); transition: transform .6s var(--ease); }
+.wb-status .btn-primary { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.wb-status .x { width: 42px; padding: 0; flex: none; }
 
-.phase-head h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 400; font-size: 23px; text-wrap: balance; }
-.phase-head p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
-.phase-enter { animation: phaseIn .55s var(--ease); }
-@keyframes phaseIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.field { position: relative; }
+.field input { width: 100%; height: 42px; border: 2px solid var(--line-2); background: var(--dark-ink); padding: 0 12px; font-size: 21px; color: var(--ink); }
+.field input::placeholder { color: var(--ink-faint); font-family: var(--font-label); font-size: 11px; letter-spacing: .1em; }
+.field input:focus { outline: none; border-color: var(--cyan); }
+.suggest { position: absolute; left: 0; right: 0; bottom: 48px; z-index: 3; list-style: none; margin: 0; padding: 4px; background: var(--panel); border: 2px solid var(--frame); box-shadow: var(--drop); }
+.suggest li { padding: 4px 8px; cursor: pointer; font-size: 20px; }
+.suggest li.hi, .suggest li:hover { background: var(--panel-2); color: var(--cyan); }
 
-.field { position: relative; display: flex; gap: 8px; }
-.field input { flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: 1.5px solid #d8ccb1; background: #fffdf7; padding: 0 14px; font: inherit; font-size: 15.5px; color: var(--ink); }
-.field input:focus { outline: none; border-color: var(--accent); }
-.suggest { position: absolute; left: 0; right: 0; top: 48px; z-index: 3; list-style: none; margin: 0; padding: 4px; background: #fffdf7; border-radius: 12px; box-shadow: var(--shadow); }
-.suggest li { padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 14.5px; }
-.suggest li.hi, .suggest li:hover { background: var(--paper-2); }
-.btn { height: 44px; border: 0; border-radius: 12px; padding: 0 16px; font-weight: 600; cursor: pointer; transition: transform .15s var(--ease), background .2s, opacity .2s; white-space: nowrap; }
-.btn:active { transform: scale(.97); }
-.btn-primary { background: var(--accent); color: var(--accent-ink); }
-.btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
-.btn .cost { font-family: var(--font-data); font-weight: 500; opacity: .85; margin-left: 6px; font-size: 13px; }
-.btn-ghost { background: var(--paper-2); color: var(--ink); }
+/* hints */
+.section-label { display: flex; align-items: center; gap: 8px; font-family: var(--font-label); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.section-label::after { content: ""; flex: 1; border-top: 2px dashed var(--line); order: 1; }
+.section-label .free-badge { order: 2; }
+.free-badge { background: var(--mint); color: var(--dark-ink); padding: 2px 6px; animation: blink 1.2s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .55; } }
+.hints { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.panel .hints { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }
+.hint { display: flex; justify-content: space-between; align-items: center; gap: 6px; height: 42px; border: 2px dashed var(--line-2); background: transparent; padding: 0 9px; font-family: var(--font-label); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); cursor: pointer; text-align: left; min-width: 0; white-space: nowrap; }
+.hint:hover:not(:disabled) { background: var(--panel-2); border-color: var(--cyan); }
+.hint:disabled { opacity: .35; cursor: not-allowed; }
+.hint .p { color: var(--butter); }
+.hint .p.free { color: var(--mint); }
 
-.glist { display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0; }
-.grow { display: grid; grid-template-columns: 1fr auto auto 54px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--paper-2); font-size: 14px; animation: rowIn .45s var(--ease); }
-@keyframes rowIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
-.grow .nm { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.grow .km, .grow .pct { font-family: var(--font-data); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.grow .pct { text-align: center; padding: 2px 0; border-radius: 6px; font-weight: 500; }
-.arrow { display: inline-block; font-size: 15px; transition: transform .6s var(--ease); }
-.grow.win { background: var(--sage); }
+/* ---------- Panel (When / What) ---------- */
+.panel {
+  position: absolute; z-index: 6; left: 50%; transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(620px, calc(100% - 32px)); max-height: 54vh;
+  display: flex; flex-direction: column; animation: panelIn .55s steps(7);
+}
+@keyframes panelIn { from { opacity: 0; transform: translate(-50%, 40px); } }
+.stepper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 12px 14px 0; }
+.chip { position: relative; padding: 6px 8px 7px; background: var(--panel-2); border: 2px solid var(--line); color: var(--ink-faint); overflow: hidden; min-width: 0; }
+.chip b { display: block; font-family: var(--font-label); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: inherit; }
+.chip span { display: block; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip.active { border-color: var(--cyan); color: var(--cyan); }
+.chip.solved { background: var(--mint); border-color: var(--mint); color: var(--dark-ink); }
+.chip.solved.helped { background: var(--pink); border-color: var(--pink); }
+.chip .rip { position: absolute; inset: 0; background: #fff; animation: chipRip .6s steps(4) forwards; }
+@keyframes chipRip { to { opacity: 0; } }
+.panel-scroll { overflow-y: auto; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 14px; flex: 1; min-height: 0; }
+.phase-head h2 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 600; font-size: 26px; letter-spacing: .02em; }
+.phase-head p { margin: 0; color: var(--ink-soft); font-size: 19px; line-height: 1.1; }
+.phase-enter { animation: phaseIn .45s steps(5); }
+@keyframes phaseIn { from { opacity: 0; transform: translateY(8px); } }
+@keyframes rowIn { from { opacity: 0; transform: translateX(-6px); } }
+
+.glist { display: flex; flex-direction: column; gap: 5px; list-style: none; margin: 0; padding: 0; }
+.grow { display: grid; grid-template-columns: 1fr auto 96px; align-items: center; gap: 10px; padding: 4px 8px; background: var(--panel-2); border: 2px solid var(--line); font-size: 19px; animation: rowIn .4s steps(4); }
+.grow .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grow .km { color: var(--ink-soft); }
+.grow .pct { text-align: center; padding: 1px 0; font-family: var(--font-label); font-size: 10px; text-transform: uppercase; color: var(--dark-ink); }
+.grow.win { border-color: var(--mint); }
 
 /* timeline */
-.yearbox { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.yearval { font-family: var(--font-display); font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
-.era { display: inline-flex; border-radius: 999px; background: var(--paper-2); padding: 3px; }
-.era button { border: 0; background: transparent; border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 700; letter-spacing: .08em; cursor: pointer; color: var(--ink-soft); }
-.era button.on { background: var(--ink); color: var(--paper); }
-.tl { position: relative; height: 74px; margin: 2px 4px 0; touch-action: none; cursor: pointer; user-select: none; overflow: hidden; }
-.tl-base { position: absolute; left: 0; right: 0; top: 30px; height: 10px; border-radius: 5px; background: repeating-linear-gradient(90deg, #e6dcc4 0 6px, #ede5d2 6px 12px); }
-.tl-win { position: absolute; top: 28px; height: 14px; border-radius: 7px; background: var(--butter); box-shadow: inset 0 0 0 1.5px #d7bd6c; }
-.tl-ticks span { position: absolute; top: 48px; transform: translateX(-50%); font-family: var(--font-data); font-size: 10.5px; color: var(--ink-soft); white-space: nowrap; }
-.tl-ticks span::before { content: ""; position: absolute; left: 50%; top: -7px; width: 1px; height: 5px; background: var(--ink-faint); }
-.tl-mark { position: absolute; top: 6px; transform: translateX(-50%); font-family: var(--font-data); font-size: 10px; padding: 2px 5px; border-radius: 6px; white-space: nowrap; color: var(--ink); }
-.tl-mark::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 2px; height: 8px; margin-left: -1px; background: currentColor; opacity: .4; }
-.tl-handle { position: absolute; top: 22px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: var(--ink); border: 3px solid var(--paper); box-shadow: 0 2px 6px rgba(0,0,0,.25); cursor: grab; }
-.tl-handle:active { cursor: grabbing; transform: scale(1.1); }
+.yearbox { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.yearval { font-family: var(--font-display); font-weight: 700; font-size: 54px; line-height: .9; color: var(--butter); text-shadow: 4px 4px 0 #5a4314; font-variant-numeric: tabular-nums; }
+.era { display: inline-flex; border: 2px solid var(--line-2); }
+.era button { border: 0; background: transparent; padding: 6px 12px; font-family: var(--font-label); font-size: 11px; letter-spacing: .1em; cursor: pointer; color: var(--ink-soft); }
+.era button.on { background: var(--cyan); color: var(--dark-ink); }
+.tl { position: relative; height: 76px; margin: 2px 4px 0; touch-action: none; cursor: pointer; user-select: none; overflow: hidden; }
+.tl-base { position: absolute; left: 0; right: 0; top: 30px; height: 10px; background: repeating-linear-gradient(90deg, #22335f 0 6px, #1a2a52 6px 12px); }
+.tl-win { position: absolute; top: 28px; height: 14px; background: var(--butter); box-shadow: inset 0 -3px 0 rgba(0,0,0,.2); }
+.tl-ticks span { position: absolute; top: 50px; transform: translateX(-50%); font-size: 17px; color: var(--ink-soft); white-space: nowrap; }
+.tl-ticks span::before { content: ""; position: absolute; left: 50%; top: -6px; width: 2px; height: 4px; margin-left: -1px; background: var(--ink-faint); }
+.tl-mark { position: absolute; top: 4px; transform: translateX(-50%); font-family: var(--font-label); font-size: 9px; padding: 2px 4px; white-space: nowrap; color: var(--dark-ink); }
+.tl-mark::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 2px; height: 8px; margin-left: -1px; background: currentColor; opacity: .5; }
+.tl-handle { position: absolute; top: 22px; width: 20px; height: 26px; margin-left: -10px; background: var(--ink); border: 3px solid var(--dark-ink); box-shadow: 3px 3px 0 #030816; cursor: grab; }
+.tl-handle::after { content: ""; position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--dark-ink); }
+.tl-handle:active { cursor: grabbing; }
 .nudges { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
-.nudges button { height: 32px; border: 0; border-radius: 8px; background: var(--paper-2); font-family: var(--font-data); font-size: 12px; cursor: pointer; }
-.nudges button:active { background: #e3d8bf; }
+.nudges button { height: 34px; border: 2px solid var(--line-2); background: var(--panel-2); font-size: 19px; cursor: pointer; }
+.nudges button:active { background: var(--line); }
 
 /* what */
 .cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.cat { border: 1.5px solid transparent; border-radius: 10px; background: var(--paper-2); padding: 9px 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s, border-color .2s, opacity .3s; min-width: 0; }
-.cat.sel { border-color: var(--ink); background: #fffdf7; }
-.cat.wrong { opacity: .4; text-decoration: line-through; cursor: not-allowed; }
-.cat.right { background: var(--sage); }
-.opts { display: flex; flex-direction: column; gap: 7px; }
-.opt { text-align: left; border: 1.5px solid transparent; border-radius: 12px; background: var(--paper-2); padding: 11px 13px; font-size: 14px; line-height: 1.4; cursor: pointer; transition: background .2s, border-color .2s, opacity .3s, transform .3s var(--ease); }
-.opt.sel { border-color: var(--ink); background: #fffdf7; }
-.opt.wrong { opacity: .4; text-decoration: line-through; cursor: not-allowed; }
-.opt.gone { opacity: .25; transform: scale(.98); cursor: not-allowed; }
-.opt.right { background: var(--sage); }
-
-/* hints + notes */
-.section-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); display: flex; justify-content: space-between; align-items: center; }
-.free-badge { background: var(--sage); color: var(--ink); padding: 2px 8px; border-radius: 999px; letter-spacing: .06em; animation: pulse 1.6s ease-in-out infinite; }
-@keyframes pulse { 50% { transform: scale(1.06); } }
-.hints { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.hint { display: flex; justify-content: space-between; align-items: center; gap: 6px; border: 1.5px dashed #cdbf9f; border-radius: 10px; background: transparent; padding: 8px 10px; font-size: 13px; cursor: pointer; text-align: left; transition: background .2s, opacity .2s; min-width: 0; }
-.hint:hover:not(:disabled) { background: var(--paper-2); }
-.hint:disabled { opacity: .4; cursor: not-allowed; }
-.hint .p { font-family: var(--font-data); font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
-.hint .p.free { color: var(--sage-deep); font-weight: 500; }
-.notes { display: flex; flex-direction: column; gap: 6px; }
-.note { background: #fbf2d4; border-radius: 10px; padding: 9px 12px; font-size: 13.5px; line-height: 1.45; animation: rowIn .45s var(--ease); }
-.note b { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 2px; }
-.broke-banner { background: var(--rose); border-radius: 10px; padding: 9px 12px; font-size: 13.5px; }
+.cat { border: 2px solid var(--line-2); background: var(--panel-2); padding: 8px 4px; font-family: var(--font-label); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; min-width: 0; }
+.cat.sel { border-color: var(--cyan); color: var(--cyan); }
+.cat.wrong { opacity: .35; text-decoration: line-through; cursor: not-allowed; }
+.cat.right { background: var(--mint); color: var(--dark-ink); }
+.opts { display: flex; flex-direction: column; gap: 6px; }
+.opt { text-align: left; border: 2px solid var(--line-2); background: var(--panel-2); padding: 8px 12px; font-size: 20px; line-height: 1.1; cursor: pointer; transition: opacity .3s; }
+.opt.sel { border-color: var(--cyan); color: var(--cyan); }
+.opt.wrong { opacity: .35; text-decoration: line-through; cursor: not-allowed; }
+.opt.gone { opacity: .2; cursor: not-allowed; }
+.opt.right { background: var(--mint); color: var(--dark-ink); border-color: var(--mint); }
 
 /* toast */
-.toast { position: absolute; z-index: 20; left: 50%; top: calc(76px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -10px); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity .3s, transform .4s var(--ease); pointer-events: none; max-width: calc(100% - 32px); text-align: center; }
+.toast { position: absolute; z-index: 20; left: 50%; top: calc(70px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -8px); background: var(--dark-ink); color: var(--ink); border: 2px solid var(--cyan); box-shadow: var(--drop); padding: 6px 14px; font-size: 20px; opacity: 0; transition: opacity .25s, transform .3s steps(4); pointer-events: none; max-width: min(560px, calc(100% - 32px)); text-align: center; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
-@media (min-width: 900px) { .toast { left: calc(50% - 200px); max-width: calc(100% - 460px); } }
-.shake { animation: shake .4s; }
-@keyframes shake { 20%,60% { transform: translateX(-5px); } 40%,80% { transform: translateX(5px); } }
+.shake { animation: shake .4s steps(4); }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 
 /* modals */
-.scrim { position: absolute; inset: 0; z-index: 30; background: rgba(58,57,70,.35); display: grid; place-items: center; padding: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); animation: fadeIn .3s; }
+.scrim { position: absolute; inset: 0; z-index: 30; background: rgba(3,8,22,.72); display: grid; place-items: center; padding: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); animation: fadeIn .25s; }
 @keyframes fadeIn { from { opacity: 0; } }
-.sheet { background: var(--paper); border-radius: 20px; box-shadow: var(--shadow); width: 100%; max-width: 560px; max-height: 100%; overflow-y: auto; padding: 22px 22px 20px; animation: sheetIn .5s var(--ease); }
-@keyframes sheetIn { from { opacity: 0; transform: translateY(16px) scale(.98); } }
-.sheet h2 { font-family: var(--font-display); font-weight: 400; font-size: 26px; margin: 0 0 6px; text-wrap: balance; }
-.sheet p { line-height: 1.55; margin: 0 0 10px; max-width: 65ch; }
-.sheet .eyebrow { font-family: var(--font-data); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
-.sheet table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 6px 0 12px; }
-.sheet td { padding: 6px 0; border-bottom: 1px solid #e6dcc6; vertical-align: top; }
-.sheet td:first-child { color: var(--ink-soft); width: 34%; padding-right: 10px; }
-.sheet td.n { font-family: var(--font-data); text-align: right; font-variant-numeric: tabular-nums; }
-.reveal-top { display: grid; grid-template-columns: 170px 1fr; gap: 18px; align-items: start; margin-bottom: 8px; }
-.reveal-top img { width: 100%; border-radius: 10px; background: #ddd8cf; }
-.rank { display: inline-flex; align-items: center; gap: 8px; background: var(--butter); border-radius: 999px; padding: 4px 12px; font-weight: 600; font-size: 14px; margin-bottom: 10px; }
-.score-big { font-family: var(--font-display); font-size: 48px; line-height: 1; margin: 4px 0 8px; }
-.share-pre { font-family: var(--font-data); font-size: 13px; background: var(--paper-2); border-radius: 12px; padding: 12px 14px; white-space: pre; overflow-x: auto; margin: 8px 0 12px; }
-.row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-.row-btns a { color: var(--accent); font-weight: 600; align-self: center; margin-left: auto; }
-.price-table td.n { width: 70px; }
-.light-photo { width: min(78vw, 440px); aspect-ratio: 3/4; max-width: 100%; position: relative; overflow: hidden; border-radius: 6px; border: 10px solid #fffdf7; box-shadow: var(--shadow); background: #ddd8cf; }
+.sheet { width: 100%; max-width: 580px; max-height: 100%; overflow-y: auto; padding: 20px 22px 18px; animation: sheetIn .4s steps(5); }
+@keyframes sheetIn { from { opacity: 0; transform: translateY(14px); } }
+.sheet h2 { font-family: var(--font-display); font-weight: 600; font-size: 30px; margin: 0 0 8px; }
+.sheet p { line-height: 1.15; margin: 0 0 10px; max-width: 65ch; }
+.sheet .eyebrow { font-family: var(--font-label); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); margin-bottom: 6px; }
+.sheet table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; }
+.sheet td { padding: 4px 0; border-bottom: 2px dashed var(--line); vertical-align: top; }
+.sheet td:first-child { color: var(--ink-soft); width: 36%; padding-right: 10px; }
+.sheet td.n { text-align: right; color: var(--butter); font-variant-numeric: tabular-nums; }
+.reveal-top { display: grid; grid-template-columns: 170px 1fr; gap: 18px; align-items: start; margin-bottom: 10px; }
+.reveal-top img { width: 100%; border: 2px solid var(--dark-ink); box-shadow: 0 0 0 2px var(--frame); background: #1a2546; }
+.rank { display: inline-flex; align-items: center; gap: 8px; background: var(--butter); color: var(--dark-ink); padding: 4px 10px; font-family: var(--font-label); font-size: 12px; margin-bottom: 10px; }
+.score-big { font-family: var(--font-display); font-weight: 700; font-size: 60px; line-height: 1; margin: 4px 0 10px; color: var(--butter); text-shadow: 4px 4px 0 #5a4314; }
+.score-big small { font-size: 22px; color: var(--ink-soft); text-shadow: none; }
+.share-pre { font-family: var(--font-ui); font-size: 19px; background: var(--dark-ink); border: 2px solid var(--line); padding: 10px 12px; white-space: pre; overflow-x: auto; margin: 8px 0 12px; }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.row-btns a { color: var(--cyan); margin-left: auto; font-family: var(--font-label); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.price-table td.n { width: 120px; }
+.light-photo { width: min(78vw, 440px); aspect-ratio: 3/4; max-width: 100%; position: relative; overflow: hidden; border: 8px solid var(--panel); box-shadow: 0 0 0 2px var(--frame), var(--drop); background: #1a2546; }
 .light-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; }
 
+/* ---------- Narrower desktops: where bar on two rows ---------- */
+@media (max-width: 1179px) {
+  .wherebar { width: min(760px, calc(100% - 32px)); grid-template-columns: minmax(0, 1fr) 220px; grid-template-areas: "status search" "hints hints"; }
+  .wherebar .wb-hints { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 /* ---------- Phone ---------- */
 @media (max-width: 899px) {
+  body { font-size: 19px; }
+  .brand h1 { font-size: 26px; }
   .brand .issue { display: none; }
   .insight .bar, .insight .lbl { display: none; }
-  .polaroid { width: 118px; padding: 6px 6px 0; top: calc(62px + env(safe-area-inset-top, 0px)); }
-  .polaroid figcaption { padding: 5px 0 7px; font-size: 10px; }
-  .polaroid figcaption .zl { display: none; }
-  .console { left: 0; right: 0; bottom: 0; top: auto; width: 100%; max-width: 100%; height: 56%; border-radius: 20px 20px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
-  .stepper, .console-scroll { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .relic-card { width: 108px; padding: 6px; top: calc(60px + env(safe-area-inset-top, 0px)); }
+  .card-head { display: none; }
+  .card-foot { margin-top: 5px; }
+  .card-foot .zl { display: none; }
+  .zoompips i { width: 6px; height: 6px; }
+  .notes { display: none; }
+  .notes-btn { display: inline-block; }
+  .wherebar { left: 8px; right: 8px; width: auto; transform: none; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); grid-template-columns: minmax(0, 1fr) 40%; padding: 8px; gap: 8px; animation-name: barInM; }
+  @keyframes barInM { from { opacity: 0; transform: translateY(16px); } }
+  .hint { padding: 0 6px; font-size: 9px; flex-direction: column; justify-content: center; gap: 2px; }
+  .panel { left: 0; right: 0; bottom: 0; width: 100%; transform: none; max-height: 60%; border-left: 0; border-right: 0; border-bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px); animation-name: panelInM; }
+  @keyframes panelInM { from { opacity: 0; transform: translateY(40px); } }
+  .stepper, .panel-scroll { padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px)); }
   .reveal-top { grid-template-columns: 110px 1fr; gap: 14px; }
-  .score-big { font-size: 38px; }
+  .score-big { font-size: 44px; }
+  .yearval { font-size: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 </style>
-
 <div id="app">
-  <svg id="map" aria-label="World map. Click a country to select it as your guess."></svg>
+  <canvas id="map" aria-label="World map. Tap a country to select it, tap again to guess."></canvas>
+  <div class="fx" id="fx" aria-hidden="true"></div>
+  <div id="mlabels" aria-hidden="true"></div>
+  <div class="tip" id="tip" hidden></div>
 
   <header class="topbar">
-    <div class="brand"><h1>Relic</h1><span class="issue" id="issue"></span></div>
+    <div class="brand"><h1>RELIC</h1><span class="issue" id="issue"></span></div>
     <div class="right-tools">
-      <div class="insight" id="insight" title="Insight: your daily budget. Guesses and hints spend it; what's left is your score.">
-        <span class="coin">i</span>
+      <div class="insight box" id="insight" title="Insight: your daily budget. Guesses and hints spend it; what's left is your score.">
+        <svg viewBox="0 0 8 8" width="24" height="24" shape-rendering="crispEdges" aria-hidden="true"><path fill="#5a4314" d="M2 0h4v1h1v1h1v4h-1v1h-1v1h-4v-1h-1v-1h-1v-4h1v-1h1z"/><path fill="#f6d36b" d="M2 1h4v1h1v4h-1v1h-4v-1h-1v-4h1z"/><path fill="#fff1b8" d="M2 2h1v2h-1z"/><path fill="#c9a23c" d="M4 2h1v4h-1z"/></svg>
         <span class="num" id="insightNum">100</span>
-        <span class="lbl">Insight</span>
-        <span class="bar"><i id="insightBar" style="width:100%"></i></span>
+        <span class="lbl">INSIGHT</span>
+        <span class="bar" id="insightBar"></span>
       </div>
-      <button class="iconbtn" id="helpBtn" aria-label="How to play">?</button>
+      <button class="iconbtn box" id="helpBtn" aria-label="How to play">?</button>
     </div>
   </header>
 
-  <button class="polaroid" id="polaroid" aria-label="Enlarge the relic photo">
-    <div class="photo"><img id="relicImg" src="relic.jpg" alt="A close-up detail of today's relic" draggable="false"></div>
-    <figcaption><span class="zl">ZOOM</span><span class="zoompips" id="zoomPips"></span></figcaption>
-  </button>
+  <aside class="relic-card box" id="relicCard">
+    <div class="card-head" id="cardHead">Exhibit</div>
+    <button class="photo" id="photoBtn" aria-label="Enlarge the relic photo"><img id="relicImg" src="relic.jpg" alt="A close-up detail of today's relic" draggable="false"></button>
+    <div class="card-foot"><span class="zl">ZOOM</span><span class="zoompips" id="zoomPips"></span><button class="notes-btn" id="notesBtn" hidden>NOTES</button></div>
+    <div class="notes" id="notes"></div>
+  </aside>
 
-  <section class="console" id="console" aria-live="polite">
+  <div class="wherebar box" id="wherebar" hidden></div>
+
+  <section class="panel box" id="panel" aria-live="polite" hidden>
     <div class="stepper" id="stepper"></div>
-    <div class="console-scroll" id="consoleScroll">
+    <div class="panel-scroll" id="panelScroll">
       <div id="phaseBody"></div>
       <div id="hintBox"></div>
-      <div class="notes" id="notes"></div>
     </div>
   </section>
 
@@ -343,7 +391,7 @@ const HINTS = {
   what: [
     { id: "zoom", label: "Zoom out", price: 6, repeat: true },
     { id: "note", label: "Curator's note", price: 15 },
-    { id: "elim", label: "Remove 2 options", price: 10, needsStep: "id" }
+    { id: "elim", label: "Remove 2", price: 10, needsStep: "id" }
   ]
 };
 const NOTE_LABEL = { material: "Material", continent: "Continent", ring: "Map ring", era: "Era", halve: "Timeline", note: "Curator's note" };
@@ -373,12 +421,8 @@ function bearing(a, b) {
   const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(l2 - l1);
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
-function heat(pct) {
-  if (pct >= 94) return "var(--coral)";
-  if (pct >= 85) return "var(--peach)";
-  if (pct >= 70) return "var(--butter)";
-  return "var(--lavender)";
-}
+function heatKey(pct) { return pct >= 94 ? "burn" : pct >= 85 ? "hot" : pct >= 70 ? "warm" : "far"; }
+function heat(pct) { return { burn: "var(--coral)", hot: "var(--peach)", warm: "var(--butter)", far: "var(--lavender)" }[heatKey(pct)]; }
 function heatEmoji(pct) { return pct >= 94 ? "🟥" : pct >= 85 ? "🟧" : pct >= 70 ? "🟨" : "🟦"; }
 
 /* ================= State ================= */
@@ -407,6 +451,7 @@ function toast(msg, ms = 2200) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), ms);
 }
 function shake(el) { if (!el) return; el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ================= Insight economy ================= */
 let shownInsight = 100;
@@ -418,8 +463,10 @@ function tweenInsight() {
     if (k < 1) requestAnimationFrame(step); else shownInsight = to;
   };
   requestAnimationFrame(step);
-  $("#insightBar").style.width = Math.max(0, Math.min(100, state.insight)) + "%";
+  const on = Math.ceil(Math.max(0, Math.min(100, state.insight)) / 10);
+  $("#insightBar").innerHTML = Array.from({ length: 10 }, (_, i) => `<i class="${i < on ? "on" : ""}"></i>`).join("");
   $("#insight").classList.toggle("broke", state.bankrupt);
+  $("#insight").classList.toggle("low", !state.bankrupt && state.insight < 30);
 }
 function floater(text, cls) {
   const f = document.createElement("span"); f.className = "floater " + cls; f.textContent = text;
@@ -452,140 +499,324 @@ function renderZoom() {
 }
 function zoomOut() { if (state.zoom > 0) { state.zoom--; renderZoom(); } }
 
-/* ================= Map ================= */
-const map = { svg: null, g: null, proj: null, path: null, zoom: null, countries: [], byName: new Map(), k: 1 };
+/* ================= Pixel map =================
+   The world is rasterised by hand into a low-res buffer (one map pixel = P screen pixels) so every
+   edge is a hard pixel step: countries are scanline-filled into an id buffer, then borders, coasts
+   and the sea are derived from neighbouring ids. The id buffer doubles as the click hit-test. */
+const PAL = {
+  space: "#070e22", sea: "#0e1d42", seaDot: "#1a2d5e", seaRing: "#16306a", shallow: "#1d3d78", rim: "#22386e",
+  border: "#2a3558", selEdge: "#ffffff",
+  land: ["#efe4c8", "#e8d4ae", "#d5e3bd", "#eed2c5", "#d7d5ee"],
+  dim: "#2b3b66", hover: "#fffaf0", sel: "#fff2a8",
+  far: "#8f9cf0", warm: "#f6d36b", hot: "#f7a46b", burn: "#ef6b6b", win: "#7fe0a6",
+  ring: "#8fe3f0", pin: "#ef6b6b", pinDark: "#3a1426", pinLight: "#ffd2cf", shadow: "#050b1c",
+  rip1: "#7fe0a6", rip2: "#4fa77c", rip3: "#2c6a6a"
+};
+const u32 = hex => { const n = parseInt(hex.slice(1), 16); return (0xff000000 | ((n & 255) << 16) | (n & 0xff00) | (n >> 16)) >>> 0; };
+const C = {}; for (const k in PAL) C[k] = Array.isArray(PAL[k]) ? PAL[k].map(u32) : u32(PAL[k]);
+const PIN = [
+  "...XXX...",
+  ".XXRRRXX.",
+  ".XRWWRRX.",
+  "XRRWRRRRX",
+  "XRRRRRRRX",
+  "XRRRRRRRX",
+  ".XRRRRRX.",
+  ".XRRRRRX.",
+  "..XRRRX..",
+  "..XRRRX..",
+  "...XRX...",
+  "...XRX...",
+  "....X...."
+];
+
+const map = { cv: null, ctx: null, P: 3, w: 0, h: 0, base: null, proj: null, s0: 1, t0: [0, 0], t: d3.zoomIdentity, zoom: null,
+  countries: [], byName: new Map(), hover: 0, raf: 0, anim: {}, focused: false, labelEls: [] };
+
+const collector = { rings: null, cur: null, moveTo(x, y) { this.cur = [x, y]; this.rings.push(this.cur); }, lineTo(x, y) { this.cur.push(x, y); }, closePath() {}, arc() {}, beginPath() {} };
+function ringsOf(path, obj) { collector.rings = []; path(obj); return collector.rings; }
+
+// Even-odd scanline fill of flat [x,y,x,y...] rings, sampling pixel centres. Returns pixels filled.
+function scanFill(rings, plot) {
+  const { w, h } = map, E = [];
+  let ymin = Infinity, ymax = -Infinity, xmin = Infinity, xmax = -Infinity;
+  for (const r of rings) {
+    const n = r.length; if (n < 6) continue;
+    for (let i = 0; i < n; i += 2) {
+      const ax = r[i], ay = r[i + 1], j = (i + 2) % n, bx = r[j], by = r[j + 1];
+      if (ax < xmin) xmin = ax; if (ax > xmax) xmax = ax; if (ay < ymin) ymin = ay; if (ay > ymax) ymax = ay;
+      if (ay !== by) E.push(ax, ay, bx, by);
+    }
+  }
+  if (xmax < 0 || xmin >= w || ymax < 0 || ymin >= h) return 0;
+  const y0 = Math.max(0, Math.floor(ymin)), y1 = Math.min(h - 1, Math.floor(ymax)), xs = [];
+  let count = 0;
+  for (let y = y0; y <= y1; y++) {
+    const sy = y + .5; xs.length = 0;
+    for (let e = 0; e < E.length; e += 4) {
+      const ay = E[e + 1], by = E[e + 3];
+      if ((ay <= sy) !== (by <= sy)) xs.push(E[e] + (sy - ay) / (by - ay) * (E[e + 2] - E[e]));
+    }
+    if (xs.length < 2) continue;
+    xs.sort((a, b) => a - b);
+    for (let k = 0; k + 1 < xs.length; k += 2) {
+      const xa = Math.max(0, Math.ceil(xs[k] - .5)), xb = Math.min(w - 1, Math.floor(xs[k + 1] - .5));
+      for (let x = xa; x <= xb; x++) { plot(y * w + x); count++; }
+    }
+  }
+  return count;
+}
+function strokeRing(r, closed, plot) {
+  const n = r.length, end = closed ? n : n - 2;
+  for (let i = 0; i < end; i += 2) {
+    const j = (i + 2) % n;
+    bresenham(Math.round(r[i]), Math.round(r[i + 1]), Math.round(r[j]), Math.round(r[j + 1]), plot);
+  }
+}
+function bresenham(x0, y0, x1, y1, plot) {
+  const { w, h } = map;
+  const dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1, dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+  let err = dx + dy, guard = 0;
+  while (true) {
+    if (x0 >= 0 && x0 < w && y0 >= 0 && y0 < h) plot(x0, y0);
+    if ((x0 === x1 && y0 === y1) || ++guard > 20000) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x0 += sx; }
+    if (e2 <= dx) { err += dx; y0 += sy; }
+  }
+}
+function setPx(x, y, c) { if (x >= 0 && x < map.w && y >= 0 && y < map.h) map.buf[y * map.w + x] = c; }
+function circlePx(cx, cy, r, c) {
+  let x = r, y = 0, err = 1 - r;
+  while (x >= y) {
+    setPx(cx + x, cy + y, c); setPx(cx + y, cy + x, c); setPx(cx - y, cy + x, c); setPx(cx - x, cy + y, c);
+    setPx(cx - x, cy - y, c); setPx(cx - y, cy - x, c); setPx(cx + y, cy - x, c); setPx(cx + x, cy - y, c);
+    y++;
+    if (err < 0) err += 2 * y + 1; else { x--; err += 2 * (y - x) + 1; }
+  }
+}
+
 async function initMap() {
   const topo = await fetch("countries-110m.json").then(r => r.json());
+  const geoms = topo.objects.countries.geometries, nb = topojson.neighbors(geoms);
   const fc = topojson.feature(topo, topo.objects.countries);
-  map.countries = fc.features.filter(f => !EXCLUDE.has(f.properties.name)).map((f, i) => {
+  // Greedy colouring so neighbours get different pastel tints.
+  const tint = new Array(geoms.length).fill(-1);
+  geoms.forEach((g, i) => {
+    const taken = new Set(nb[i].map(j => tint[j]));
+    let t = i % PAL.land.length;
+    for (let k = 0; k < PAL.land.length && taken.has(t); k++) t = (t + 1) % PAL.land.length;
+    tint[i] = t;
+  });
+  map.countries = [];
+  fc.features.forEach((f, i) => {
+    if (EXCLUDE.has(f.properties.name)) return;
     const name = DISPLAY[f.properties.name] || f.properties.name;
-    let c;
+    let main = f.geometry;
     if (f.geometry.type === "MultiPolygon") {
-      let best = null, ba = -1;
-      for (const poly of f.geometry.coordinates) { const g = { type: "Polygon", coordinates: poly }, a = d3.geoArea(g); if (a > ba) { ba = a; best = g; } }
-      c = d3.geoCentroid(best);
-    } else c = d3.geoCentroid(f);
-    const o = { f, name, centroid: c, tint: ["var(--land)", "var(--land-2)", "var(--land-3)"][i % 3] };
+      let ba = -1;
+      for (const poly of f.geometry.coordinates) { const g = { type: "Polygon", coordinates: poly }, a = d3.geoArea(g); if (a > ba) { ba = a; main = g; } }
+    }
+    const o = { f, name, main, centroid: d3.geoCentroid(main), tint: tint[i] };
     map.byName.set(name.toLowerCase(), o);
-    return o;
+    map.countries.push(o);
   });
-  map.svg = d3.select("#map");
-  map.g = map.svg.append("g");
-  map.g.append("path").attr("class", "sphere");
-  map.g.append("path").attr("class", "graticule");
-  map.g.append("g").attr("class", "countries")
-    .selectAll("path").data(map.countries).join("path")
-    .attr("class", "country").attr("data-name", d => d.name)
-    .attr("fill", d => d.tint)
-    .on("click", (ev, d) => onCountryClick(d));
-  map.g.append("g").attr("class", "overlays");
-  map.g.append("g").attr("class", "labels");
-  map.g.append("g").attr("class", "pinlayer");
-  map.zoom = d3.zoom().scaleExtent([1, 10]).on("zoom", ev => {
-    map.k = ev.transform.k; map.g.attr("transform", ev.transform); scaleMarks();
+  map.graticule = d3.geoGraticule10();
+  map.ringGeo = d3.geoCircle().center(PUZZLE.ringCenter).radius(1000 / R_KM * 180 / Math.PI)();
+  map.cv = $("#map"); map.ctx = map.cv.getContext("2d");
+  const sel = d3.select(map.cv);
+  map.zoom = d3.zoom().scaleExtent([1, 14]).on("zoom", ev => { map.t = ev.transform; requestRender(); });
+  sel.call(map.zoom).on("dblclick.zoom", null);
+  map.cv.addEventListener("click", e => {
+    const id = pickId(e.clientX, e.clientY);
+    if (id) onCountryClick(map.countries[id - 1]);
+    else if (selectedCountry && state.phase === "where") { selectedCountry = null; drawStatus(); requestRender(); }
   });
-  map.svg.call(map.zoom).on("dblclick.zoom", null);
+  map.cv.addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse") return;
+    const id = e.buttons ? 0 : pickId(e.clientX, e.clientY), tip = $("#tip");
+    if (id) { tip.hidden = false; tip.textContent = map.countries[id - 1].name; tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 16) + "px"; }
+    else tip.hidden = true;
+    map.cv.classList.toggle("over", !!id && state.phase === "where");
+    if (id !== map.hover) { map.hover = id; if (state.phase === "where") requestRender(); }
+  });
+  map.cv.addEventListener("pointerleave", () => { $("#tip").hidden = true; if (map.hover) { map.hover = 0; requestRender(); } });
   layoutMap();
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(layoutMap, 150); });
 }
-function mapExtent() {
-  const W = innerWidth, H = innerHeight, con = $("#console").getBoundingClientRect();
-  if (W >= 900) return [[24, 70], [Math.max(200, con.left - 16), H - 20]];
-  return [[8, 60], [W - 8, Math.max(160, con.top - 8)]];
-}
 function layoutMap() {
-  if (!map.svg) return;
-  map.proj = d3.geoNaturalEarth1().fitExtent(mapExtent(), { type: "Sphere" });
-  map.path = d3.geoPath(map.proj);
-  map.g.select(".sphere").attr("d", map.path({ type: "Sphere" }));
-  map.g.select(".graticule").attr("d", map.path(d3.geoGraticule10()));
-  map.g.selectAll(".country").attr("d", d => map.path(d.f));
-  redrawOverlays();
+  if (!map.cv) return;
+  const W = innerWidth, H = innerHeight, P = map.P = W < 600 ? 2 : 3;
+  const w = map.w = Math.ceil(W / P), h = map.h = Math.ceil(H / P);
+  map.cv.width = w; map.cv.height = h;
+  map.cv.style.width = w * P + "px"; map.cv.style.height = h * P + "px";
+  map.img = map.ctx.createImageData(w, h);
+  map.buf = new Uint32Array(map.img.data.buffer);
+  map.ids = new Uint16Array(w * h); map.sea = new Uint8Array(w * h); map.grat = new Uint8Array(w * h); map.rmask = new Uint8Array(w * h);
+  const top = (W < 900 ? 60 : 66) / P, bot = (W < 900 ? 112 : W < 1180 ? 130 : 80) / P;
+  map.base = d3.geoNaturalEarth1().fitExtent([[10 / P, top], [w - 10 / P, h - bot]], { type: "Sphere" });
+  map.s0 = map.base.scale(); map.t0 = map.base.translate();
+  map.zoom.extent([[0, 0], [W, H]]).translateExtent([[-W * .4, -H * .4], [W * 1.4, H * 1.4]]);
+  // Phones are tall and narrow: open zoomed in so the world fills the screen instead of a thin strip.
+  if (W < 600 && map.t.k === 1 && state.phase === "where") {
+    const q = map.base([40, 25]);
+    map.t = d3.zoomIdentity.translate(W / 2, (top * P + H - bot * P) / 2).scale(1.9).translate(-q[0] * P, -q[1] * P);
+    d3.select(map.cv).call(map.zoom.transform, map.t);
+  }
+  requestRender();
 }
-function redrawOverlays() {
-  const ov = map.g.select(".overlays"); ov.selectAll("*").remove();
-  if (state.used.ring) ov.append("path").attr("class", "ring").attr("d", map.path(d3.geoCircle().center(PUZZLE.ringCenter).radius(1000 / R_KM * 180 / Math.PI)()));
-  const lab = map.g.select(".labels"); lab.selectAll("*").remove();
-  state.where.guesses.forEach(g => {
-    const o = map.byName.get(g.name.toLowerCase()); if (!o) return;
-    const [x, y] = map.proj(o.centroid);
-    lab.append("text").attr("class", "glabel").attr("x", x).attr("y", y).attr("text-anchor", "middle").text(g.correct ? g.name : `${g.name} ${g.pct}%`);
-  });
-  paintCountries();
-  if (state.where.solved) placePin(false);
-  scaleMarks();
-}
-function paintCountries() {
+function requestRender() { if (map.cv && !map.raf) map.raf = requestAnimationFrame(render); }
+function countryFills() {
+  const fill = new Uint32Array(map.countries.length + 1);
   const guessed = new Map(state.where.guesses.map(g => [g.name, g]));
-  map.g.selectAll(".country")
-    .attr("fill", d => { const g = guessed.get(d.name); return g ? (g.correct ? "var(--sage)" : heat(g.pct)) : d.tint; })
-    .classed("guessed", d => guessed.has(d.name))
-    .classed("dim", d => !!state.used.continent && !ASIA.has(d.name) && !guessed.has(d.name))
-    .classed("sel", d => d.name === selectedCountry);
-}
-function scaleMarks() {
-  if (!map.g) return;
-  map.g.selectAll(".glabel").attr("font-size", 12 / map.k).style("stroke-width", 3 / map.k + "px");
-  map.g.selectAll(".pin").attr("transform", function () { const [x, y] = map.proj(PUZZLE.target); return `translate(${x},${y}) scale(${1 / map.k})`; });
-}
-function placePin(animate) {
-  const layer = map.g.select(".pinlayer"); layer.selectAll("*").remove();
-  const [x, y] = map.proj(PUZZLE.target);
-  const pin = layer.append("g").attr("class", "pin").attr("transform", `translate(${x},${y}) scale(${1 / map.k})`);
-  const inner = pin.append("g");
-  inner.append("ellipse").attr("rx", 6).attr("ry", 2.4).attr("fill", "rgba(58,57,70,.25)");
-  const head = inner.append("g");
-  head.append("path").attr("class", "pin-body").attr("d", "M0,0 C-3,-8 -11,-13 -11,-22 A11,11 0 1 1 11,-22 C11,-13 3,-8 0,0Z");
-  head.append("circle").attr("class", "pin-dot").attr("cy", -22).attr("r", 4.2);
-  if (!animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  head.attr("transform", "translate(0,-180)").style("opacity", 0)
-    .transition().duration(650).ease(d3.easeBounceOut).attr("transform", "translate(0,0)").style("opacity", 1);
-  [0, 280, 560].forEach(delay => {
-    pin.insert("circle", ":first-child").attr("class", "ripple").attr("r", 2).style("opacity", .9)
-      .transition().delay(600 + delay).duration(1500).ease(d3.easeCubicOut).attr("r", 70).style("opacity", 0).remove();
+  const selId = selectedCountry ? map.countries.indexOf(map.byName.get(selectedCountry.toLowerCase())) + 1 : 0;
+  map.countries.forEach((c, i) => {
+    const id = i + 1, g = guessed.get(c.name);
+    fill[id] = g ? (g.correct ? C.win : C[heatKey(g.pct)])
+      : id === selId ? C.sel
+      : state.used.continent && !ASIA.has(c.name) ? C.dim
+      : id === map.hover && state.phase === "where" ? C.hover
+      : C.land[c.tint];
   });
+  return { fill, selId };
 }
-function flyTo(lonlat, k) {
-  const [x, y] = map.proj(lonlat), [[x0, y0], [x1, y1]] = mapExtent();
-  const t = d3.zoomIdentity.translate((x0 + x1) / 2, (y0 + y1) / 2).scale(k).translate(-x, -y);
-  map.svg.transition().duration(1100).ease(d3.easeCubicInOut).call(map.zoom.transform, t);
+function render() {
+  map.raf = 0;
+  const { w, h, P, ids, sea, grat, rmask, buf } = map, t = map.t;
+  const proj = map.proj = d3.geoNaturalEarth1().scale(map.s0 * t.k).translate([t.x / P + t.k * map.t0[0], t.y / P + t.k * map.t0[1]]);
+  const path = d3.geoPath(proj, collector);
+  ids.fill(0); sea.fill(0); grat.fill(0); rmask.fill(0);
+  scanFill(ringsOf(path, { type: "Sphere" }), p => { sea[p] = 1; });
+  for (const r of ringsOf(path, map.graticule)) strokeRing(r, false, (x, y) => { if (((x + y) & 1) === 0) grat[y * w + x] = 1; });
+  map.countries.forEach((c, i) => {
+    const id = i + 1;
+    if (!scanFill(ringsOf(path, c.f), p => { ids[p] = id; })) {
+      // Keep tiny countries visible (and clickable) as at least one pixel.
+      const q = proj(c.centroid);
+      if (q) { const x = Math.floor(q[0]), y = Math.floor(q[1]); if (x >= 0 && x < w && y >= 0 && y < h && !ids[y * w + x]) ids[y * w + x] = id; }
+    }
+  });
+  let ringRings = null;
+  if (state.used.ring) { ringRings = ringsOf(path, map.ringGeo); scanFill(ringRings, p => { rmask[p] = 1; }); }
+  const { fill, selId } = countryFills();
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const p = y * w + x, id = ids[p];
+    if (id) {
+      const r = x + 1 < w ? ids[p + 1] : id, d = y + 1 < h ? ids[p + w] : id, l = x ? ids[p - 1] : id, u = y ? ids[p - w] : id;
+      const edge = r !== id || d !== id || l === 0 || u === 0;
+      buf[p] = edge ? (id === selId ? C.selEdge : C.border) : fill[id];
+    } else if (sea[p]) {
+      const near = (x + 1 < w && ids[p + 1]) || (x && ids[p - 1]) || (y + 1 < h && ids[p + w]) || (y && ids[p - w]);
+      const rim = (x + 1 < w && !sea[p + 1]) || (x && !sea[p - 1]) || (y + 1 < h && !sea[p + w]) || (y && !sea[p - w]);
+      buf[p] = near ? C.shallow : rim ? C.rim : grat[p] ? C.seaDot : rmask[p] ? C.seaRing : C.sea;
+    } else buf[p] = C.space;
+  }
+  if (ringRings) { let k = 0; for (const r of ringRings) strokeRing(r, true, (x, y) => { if ((k++ % 6) < 4) setPx(x, y, C.ring); }); }
+  const animating = drawPin(performance.now());
+  map.ctx.putImageData(map.img, 0, 0);
+  placeLabels();
+  if (animating) requestRender();
+}
+function drawPin(now) {
+  if (!state.where.solved) return false;
+  const q = map.proj(PUZZLE.target); if (!q) return false;
+  const px = Math.floor(q[0]), py = Math.floor(q[1]);
+  let dy = 0, animating = false;
+  const a = map.anim.pin;
+  if (a != null) {
+    const e = now - a;
+    if (e < 650) { dy = -Math.round((1 - d3.easeBounceOut(e / 650)) * 50); animating = true; }
+    [600, 880, 1160].forEach(d0 => {
+      const pr = (e - d0) / 1500;
+      if (pr > 0 && pr < 1) { animating = true; circlePx(px, py, Math.round(2 + pr * 26), pr < .4 ? C.rip1 : pr < .7 ? C.rip2 : C.rip3); }
+      else if (pr <= 0) animating = true;
+    });
+    if (!animating) map.anim.pin = null;
+  }
+  for (let i = -2; i <= 2; i++) setPx(px + i, py + 1, C.shadow);
+  PIN.forEach((row, ry) => {
+    for (let rx = 0; rx < row.length; rx++) {
+      const ch = row[rx];
+      if (ch !== ".") setPx(px - 4 + rx, py - 12 + ry + dy, ch === "X" ? C.pinDark : ch === "W" ? C.pinLight : C.pin);
+    }
+  });
+  return animating;
+}
+function pickId(cx, cy) {
+  const x = Math.floor(cx / map.P), y = Math.floor(cy / map.P);
+  for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+    const X = x + dx, Y = y + dy;
+    if (X >= 0 && X < map.w && Y >= 0 && Y < map.h) { const id = map.ids[Y * map.w + X]; if (id) return id; }
+  }
+  return 0;
+}
+function syncLabels() {
+  const root = $("#mlabels");
+  root.innerHTML = state.where.guesses.map(g => `<div class="mlabel ${g.correct ? "win" : ""}" data-n="${esc(g.name)}"><i style="background:${g.correct ? "var(--mint)" : heat(g.pct)}"></i>${esc(g.name)}${g.correct ? "" : ` <b>${g.pct}%</b>`}</div>`).join("");
+  map.labelEls = [...root.children].map(el => ({ el, o: map.byName.get(el.dataset.n.toLowerCase()) }));
+  placeLabels();
+}
+function placeLabels() {
+  if (!map.proj) return;
+  for (const { el, o } of map.labelEls) {
+    const win = o.name === PUZZLE.country, q = map.proj(win ? PUZZLE.target : o.centroid); if (!q) continue;
+    el.style.transform = `translate(${Math.round(q[0] * map.P)}px, ${Math.round(q[1] * map.P + (win ? 20 : 0))}px) translate(-50%, -50%)`;
+  }
+}
+function focusRect() {
+  const W = innerWidth, H = innerHeight, pan = $("#panel"), bar = $("#wherebar");
+  const el = !pan.hidden ? pan : !bar.hidden ? bar : null;
+  return { x0: 12, y0: 70, x1: W - 12, y1: el ? el.getBoundingClientRect().top - 10 : H - 12 };
+}
+function flyToPx(pt, k, dur = 1100) {
+  const r = focusRect();
+  const t = d3.zoomIdentity.translate((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2).scale(k).translate(-pt[0], -pt[1]);
+  d3.select(map.cv).transition().duration(reduced() ? 0 : dur).ease(d3.easeCubicInOut).call(map.zoom.transform, t);
+}
+function flyTo(lonlat, k) { const q = map.base(lonlat); flyToPx([q[0] * map.P, q[1] * map.P], k); }
+function fitCountry(o, dur) {
+  const P = map.P, [[x0, y0], [x1, y1]] = d3.geoPath(map.base).bounds(o.main), r = focusRect();
+  const k = Math.max(1.5, Math.min(12, .7 * Math.min((r.x1 - r.x0) / ((x1 - x0) * P), (r.y1 - r.y0) / ((y1 - y0) * P))));
+  flyToPx([(x0 + x1) / 2 * P, (y0 + y1) / 2 * P], k, dur);
 }
 
 /* ================= Stepper ================= */
 function renderStepper(ripple) {
   const w = state.where, wh = state.when, wt = state.what;
   const chips = [
-    { k: "where", t: "Where", s: w.solved ? PUZZLE.country : `${w.guesses.length} guess${w.guesses.length === 1 ? "" : "es"}` },
-    { k: "when", t: "When", s: wh.solved ? `${PUZZLE.yearLo}–${String(PUZZLE.yearHi).slice(2)}` : (state.phase === "where" ? "Locked" : `${wh.guesses.length} guess${wh.guesses.length === 1 ? "" : "es"}`) },
-    { k: "what", t: "What", s: wt.solved ? PUZZLE.fn : (["where", "when"].includes(state.phase) ? "Locked" : (wt.step === "fn" ? "Function" : "Identity")) }
+    { k: "where", t: "Where", s: w.solved ? PUZZLE.country : `${w.guesses.length} guesses` },
+    { k: "when", t: "When", s: wh.solved ? `${PUZZLE.yearLo}–${String(PUZZLE.yearHi).slice(2)}` : `${wh.guesses.length} guess${wh.guesses.length === 1 ? "" : "es"}` },
+    { k: "what", t: "What", s: wt.solved ? PUZZLE.fn : (state.phase === "when" ? "Locked" : (wt.step === "fn" ? "Function" : "Identity")) }
   ];
   $("#stepper").innerHTML = chips.map(c => {
     const solved = state[c.k].solved, active = state.phase === c.k;
-    return `<div class="chip ${solved ? "solved" : ""} ${solved && state.bankrupt ? "helped" : ""} ${active ? "active" : ""}" data-k="${c.k}"><b>${c.t}</b><span>${esc(c.s)}</span>${ripple === c.k ? '<i class="rip"></i>' : ""}</div>`;
+    return `<div class="chip ${solved ? "solved" : ""} ${solved && state.bankrupt ? "helped" : ""} ${active ? "active" : ""}"><b>${c.t}</b><span>${esc(c.s)}</span>${ripple === c.k ? '<i class="rip"></i>' : ""}</div>`;
   }).join("");
 }
 
 /* ================= Hints + notes ================= */
 function hintPrice(h) { return state.bankrupt ? 0 : (state.free[state.phase] ? 0 : h.price); }
 function renderHints() {
-  const box = $("#hintBox");
-  if (state.phase === "done") { box.innerHTML = ""; return; }
-  const list = HINTS[state.phase];
+  const inBar = state.phase === "where", box = inBar ? $("#barHints") : $("#hintBox");
+  if (!inBar) $("#hintBox").innerHTML = "";
+  if (!box || state.phase === "done") return;
   const free = state.free[state.phase] && !state.bankrupt;
-  box.innerHTML = `<div class="section-label"><span>Hints</span>${free ? '<span class="free-badge">1 free hint</span>' : ""}</div>
-    <div class="hints" style="margin-top:8px">${list.map(h => {
-      const done = !h.repeat && state.used[h.id];
-      const blocked = (h.id === "zoom" && state.zoom === 0) || (h.needsStep && state.what.step !== h.needsStep);
-      const p = hintPrice(h);
-      return `<button class="hint" data-h="${h.id}" ${done || blocked ? "disabled" : ""}><span>${h.label}</span><span class="p ${p === 0 ? "free" : ""}">${done ? "used" : p === 0 ? "free" : "−" + p}</span></button>`;
-    }).join("")}</div>`;
+  const btns = HINTS[state.phase].map(h => {
+    const done = !h.repeat && state.used[h.id];
+    const blocked = (h.id === "zoom" && state.zoom === 0) || (h.needsStep && state.what.step !== h.needsStep);
+    const p = hintPrice(h);
+    return `<button class="hint" data-h="${h.id}" ${done || blocked ? "disabled" : ""}><span>${h.label}</span><span class="p ${p === 0 ? "free" : ""}">${done ? "used" : p === 0 ? "free" : "−" + p}</span></button>`;
+  }).join("");
+  box.innerHTML = inBar ? btns : `<div class="section-label"><span>Hints</span>${free ? '<span class="free-badge">1 free hint</span>' : ""}</div><div class="hints">${btns}</div>`;
   box.querySelectorAll(".hint").forEach(b => b.addEventListener("click", () => useHint(b.dataset.h)));
 }
+function notesHtml() {
+  const banner = state.bankrupt && state.phase !== "done" ? `<div class="broke-banner">Out of Insight. Guesses and hints are free now, but today's score is 0.</div>` : "";
+  return banner + state.notes.map(k => `<div class="note"><span class="k">${NOTE_LABEL[k]}</span>${esc(PUZZLE.hintText[k])}</div>`).join("");
+}
 function renderNotes() {
-  const n = $("#notes");
-  const banner = state.bankrupt && state.phase !== "done" ? `<div class="broke-banner">You're out of Insight. Guesses and hints are free now, but today's score is 0.</div>` : "";
-  n.innerHTML = banner + (state.notes.length ? `<div class="section-label">Field notes</div>` : "") +
-    state.notes.map(k => `<div class="note"><b>${NOTE_LABEL[k]}</b>${esc(PUZZLE.hintText[k])}</div>`).join("");
+  $("#notes").innerHTML = notesHtml();
+  const nb = $("#notesBtn"); nb.hidden = !state.notes.length && !state.bankrupt; nb.textContent = `NOTES ${state.notes.length}`;
 }
 function useHint(id) {
   const h = HINTS[state.phase].find(x => x.id === id); if (!h) return;
@@ -595,28 +826,27 @@ function useHint(id) {
   if (id === "zoom") { zoomOut(); }
   else {
     state.used[id] = true;
-    if (PUZZLE.hintText[id] && id !== "halve") state.notes.push(id);
-    if (id === "continent") { paintCountries(); toast("Showing Asia"); }
-    if (id === "ring") { redrawOverlays(); flyTo(PUZZLE.ringCenter, 2.6); }
+    if (PUZZLE.hintText[id] && id !== "halve") { state.notes.push(id); toast(`${NOTE_LABEL[id]}: ${PUZZLE.hintText[id]}`, 4200); }
+    if (id === "continent") requestRender();
+    if (id === "ring") { requestRender(); flyTo(PUZZLE.ringCenter, 2.6); }
     if (id === "halve") {
       const mid = Math.round((state.when.lo + state.when.hi) / 2);
       if (PUZZLE.yearLo > mid) state.when.lo = mid; else state.when.hi = mid;
       state.when.cur = Math.round((state.when.lo + state.when.hi) / 2);
-      state.notes.push("halve"); tlRefresh(true);
+      state.notes.push("halve"); tlRefresh(true); toast("Timeline window halved");
     }
     if (id === "elim") { state.what.elim = true; renderWhatBody(); }
   }
   renderHints(); renderNotes(); save();
 }
 
-/* ================= Phase: WHERE ================= */
+/* ================= Phase: WHERE (map only, slim bar) ================= */
 let selectedCountry = null, suggestIdx = 0, suggestions = [];
 function onCountryClick(d) {
   if (state.phase !== "where") return;
   if (state.where.guesses.some(g => g.name === d.name)) { toast(`You already guessed ${d.name}`); return; }
-  selectedCountry = d.name;
-  const inp = $("#whereInput"); if (inp) { inp.value = d.name; }
-  closeSuggest(); paintCountries(); updateWhereBtn();
+  if (selectedCountry === d.name) { commitWhere(); return; }
+  selectedCountry = d.name; drawStatus(); requestRender();
 }
 function resolveCountry(text) {
   const t = text.trim().toLowerCase(); if (!t) return null;
@@ -624,30 +854,40 @@ function resolveCountry(text) {
   const o = map.byName.get(t); return o ? o.name : null;
 }
 function renderWhere() {
-  $("#phaseBody").innerHTML = `<div class="phase-enter" style="display:flex;flex-direction:column;gap:14px">
-    <div class="phase-head"><h2>Where was it made?</h2><p>Type a country or tap one on the map. Each guess costs <b>${COST.where}</b> Insight, and each miss pulls the photo back one step.</p></div>
-    <div class="field">
-      <input id="whereInput" type="text" placeholder="Search countries" autocomplete="off" spellcheck="false" aria-label="Country guess">
-      <button class="btn btn-primary" id="whereBtn" disabled>Guess<span class="cost">−${COST.where}</span></button>
-      <ul class="suggest" id="suggest" hidden></ul>
-    </div>
-    <ul class="glist" id="glist"></ul></div>`;
+  const bar = $("#wherebar");
+  bar.innerHTML = `<div class="wb-status" id="wbStatus"></div>
+    <div class="wb-search field"><input id="whereInput" type="text" placeholder="FIND A COUNTRY" autocomplete="off" spellcheck="false" aria-label="Find a country"><ul class="suggest" id="suggest" hidden></ul></div>
+    <div class="wb-hints hints" id="barHints"></div>`;
   const inp = $("#whereInput");
-  inp.addEventListener("input", () => { selectedCountry = resolveCountry(inp.value); paintCountries(); openSuggest(inp.value); updateWhereBtn(); });
+  inp.addEventListener("input", () => openSuggest(inp.value));
   inp.addEventListener("keydown", e => {
     if (e.key === "ArrowDown") { e.preventDefault(); suggestIdx = Math.min(suggestions.length - 1, suggestIdx + 1); drawSuggest(); }
     else if (e.key === "ArrowUp") { e.preventDefault(); suggestIdx = Math.max(0, suggestIdx - 1); drawSuggest(); }
     else if (e.key === "Escape") closeSuggest();
     else if (e.key === "Enter") {
       e.preventDefault();
-      if (!$("#suggest").hidden && suggestions[suggestIdx]) pickSuggest(suggestions[suggestIdx]);
-      else commitWhere();
+      if (suggestions[suggestIdx]) pickSuggest(suggestions[suggestIdx]);
+      else { const n = resolveCountry(inp.value); if (n) pickSuggest(n); else if (selectedCountry) commitWhere(); else shake(inp); }
     }
   });
   inp.addEventListener("blur", () => setTimeout(closeSuggest, 150));
-  $("#whereBtn").addEventListener("click", commitWhere);
-  drawGuessList();
-  if (matchMedia("(min-width: 900px)").matches) inp.focus();
+  drawStatus();
+}
+function drawStatus() {
+  const st = $("#wbStatus"); if (!st) return;
+  const gs = state.where.guesses, last = gs[gs.length - 1];
+  if (state.where.solved) {
+    st.innerHTML = `<span class="heat-chip" style="background:var(--mint)">FOUND</span><div class="wb-prompt"><span class="t">${esc(PUZZLE.country)}</span><span class="s">Zooming in...</span></div>`;
+  } else if (selectedCountry) {
+    st.innerHTML = `<button class="btn btn-primary pulse" id="whereBtn">Guess ${esc(selectedCountry)}${state.bankrupt ? "" : `<span class="cost">−${COST.where}</span>`}</button><button class="btn x" id="clearSel" aria-label="Clear selection">✕</button>`;
+    $("#whereBtn").addEventListener("click", commitWhere);
+    $("#clearSel").addEventListener("click", () => { selectedCountry = null; drawStatus(); requestRender(); });
+  } else if (last) {
+    st.innerHTML = `<span class="heat-chip" style="background:${heat(last.pct)}">${last.pct}%</span>
+      <div class="wb-prompt"><span class="t">${esc(last.name)} · ${fmtKm(last.km)} <span class="arrow" style="transform:rotate(${last.dir}deg)">↑</span></span><span class="s">Guess ${gs.length} · tap another country</span></div>`;
+  } else {
+    st.innerHTML = `<div class="wb-prompt"><span class="t">Where was it made?</span><span class="s">Tap a country, then tap again to guess · −${COST.where}</span></div>`;
+  }
 }
 function openSuggest(q) {
   q = q.trim().toLowerCase();
@@ -668,44 +908,34 @@ function drawSuggest() {
   ul.querySelectorAll("li").forEach(li => li.addEventListener("mousedown", e => { e.preventDefault(); pickSuggest(li.dataset.n); }));
 }
 function closeSuggest() { const ul = $("#suggest"); if (ul) ul.hidden = true; suggestions = []; }
-function pickSuggest(n) { $("#whereInput").value = n; selectedCountry = n; closeSuggest(); paintCountries(); updateWhereBtn(); }
-function updateWhereBtn() {
-  const b = $("#whereBtn"); if (!b) return;
-  const ok = selectedCountry && !state.where.guesses.some(g => g.name === selectedCountry);
-  b.disabled = !ok;
-  b.innerHTML = `Guess${state.bankrupt ? "" : `<span class="cost">−${COST.where}</span>`}`;
+function pickSuggest(n) {
+  const inp = $("#whereInput"); inp.value = ""; closeSuggest(); inp.blur();
+  if (state.where.guesses.some(g => g.name === n)) { toast(`You already guessed ${n}`); return; }
+  selectedCountry = n; drawStatus(); requestRender();
+  flyTo(map.byName.get(n.toLowerCase()).centroid, Math.max(map.t.k, 2.4));
 }
 function commitWhere() {
-  const inp = $("#whereInput");
-  const name = selectedCountry || resolveCountry(inp.value);
-  if (!name) { shake(inp); toast("Pick a country from the list"); return; }
-  if (state.where.guesses.some(g => g.name === name)) { shake(inp); toast(`You already guessed ${name}`); return; }
+  const name = selectedCountry;
+  if (!name || state.phase !== "where") return;
+  if (state.where.guesses.some(g => g.name === name)) { toast(`You already guessed ${name}`); return; }
   const o = map.byName.get(name.toLowerCase());
   spend(COST.where);
   const correct = name === PUZZLE.country;
   const km = correct ? 0 : d3.geoDistance(o.centroid, PUZZLE.target) * R_KM;
   const pct = correct ? 100 : Math.max(0, Math.round((1 - km / (Math.PI * R_KM)) * 100));
-  const g = { name, km, pct, dir: correct ? 0 : bearing(o.centroid, PUZZLE.target), correct };
-  state.where.guesses.push(g);
-  selectedCountry = null; inp.value = ""; closeSuggest();
-  redrawOverlays(); drawGuessList(); updateWhereBtn();
+  state.where.guesses.push({ name, km, pct, dir: correct ? 0 : bearing(o.centroid, PUZZLE.target), correct });
+  selectedCountry = null;
+  syncLabels(); drawStatus();
   if (correct) {
     state.where.solved = true;
-    placePin(true); flyTo(PUZZLE.target, 3.2);
+    map.anim.pin = reduced() ? null : performance.now();
+    requestRender(); drawStatus();
     finishPhase("where", "when", state.where.guesses.length);
   } else {
-    zoomOut();
+    zoomOut(); requestRender();
     toast(`${name}: ${fmtKm(km)} away`);
-    renderStepper(); save();
+    save();
   }
-}
-function drawGuessList() {
-  const ul = $("#glist"); if (!ul) return;
-  ul.innerHTML = [...state.where.guesses].reverse().map(g => `<li class="grow ${g.correct ? "win" : ""}">
-    <span class="nm">${esc(g.name)}</span>
-    <span class="km">${g.correct ? "found it" : fmtKm(g.km)}</span>
-    <span class="arrow" style="transform:rotate(${g.dir}deg)" aria-label="direction">${g.correct ? "📍" : "↑"}</span>
-    <span class="pct" style="background:${g.correct ? "var(--sage)" : heat(g.pct)}">${g.pct}%</span></li>`).join("");
 }
 
 /* ================= Momentum ================= */
@@ -716,13 +946,14 @@ function finishPhase(from, to, n) {
     if (n === 1) { gain(5); state.free[to] = true; msg = "First try! +5 Insight and a free hint in the next phase"; }
     else if (n === 2) { state.free[to] = true; msg = "Momentum: your next phase starts with a free hint"; }
   }
-  renderStepper(from); renderHints(); save();
+  if (from !== "where") { renderStepper(from); renderHints(); }
+  save();
   if (msg) toast(msg, 3000);
   setTimeout(() => {
     state.phase = to; save();
     renderPhase();
     if (to === "done") setTimeout(showReveal, 500);
-  }, 1100);
+  }, from === "where" ? 1400 : 1100);
 }
 
 /* ================= Phase: WHEN (timeline) ================= */
@@ -734,8 +965,8 @@ function viewTarget() {
   return [Math.max(TL_MIN - 50, lo - pad), Math.min(TL_MAX + 50, hi + pad)];
 }
 function renderWhen() {
-  $("#phaseBody").innerHTML = `<div class="phase-enter" style="display:flex;flex-direction:column;gap:14px">
-    <div class="phase-head"><h2>When was it made?</h2><p>Drag the marker to a year. A guess within <b>±${PUZZLE.tolerance} years</b> of the true date solves it. Each guess costs <b>${COST.when}</b>, and the yellow window shrinks as you learn.</p></div>
+  $("#phaseBody").innerHTML = `<div class="phase-enter" style="display:flex;flex-direction:column;gap:12px">
+    <div class="phase-head"><h2>When was it made?</h2><p>Slide to a year. Within <b>±${PUZZLE.tolerance} years</b> solves it. Each guess costs <b>${COST.when}</b>, and the yellow window shrinks as you learn.</p></div>
     <div class="yearbox">
       <span class="yearval" id="yearVal"></span>
       <span class="era" role="group" aria-label="Era"><button id="eraBce">BCE</button><button id="eraCe">CE</button></span>
@@ -794,7 +1025,7 @@ function tlDraw() {
     ticks += `<span style="left:${x}%">${t < 0 ? -t + " BCE" : t === 0 ? "1 CE" : t}</span>`;
   }
   $("#tlTicks").innerHTML = ticks;
-  const bandBg = { close: "var(--butter)", warm: "var(--peach)", far: "var(--rose)", hit: "var(--sage)" };
+  const bandBg = { close: "var(--butter)", warm: "var(--peach)", far: "var(--pink)", hit: "var(--mint)" };
   $("#tlMarks").innerHTML = state.when.guesses.map(g => {
     const x = pctX(g.y); if (x < -5 || x > 105) return "";
     return `<span class="tl-mark" style="left:${Math.max(3, Math.min(97, x))}%;background:${bandBg[g.band]}">${g.dir === "later" ? "→" : g.dir === "earlier" ? "←" : "✓"} ${g.y < 0 ? -g.y + "B" : g.y}</span>`;
@@ -803,7 +1034,7 @@ function tlDraw() {
 }
 function tlRefresh(animate) {
   const [toLo, toHi] = viewTarget();
-  if (!animate || matchMedia("(prefers-reduced-motion: reduce)").matches) { tl.vLo = toLo; tl.vHi = toHi; tlDraw(); setYear(state.when.cur); return; }
+  if (!animate || reduced()) { tl.vLo = toLo; tl.vHi = toHi; tlDraw(); setYear(state.when.cur); return; }
   const fLo = tl.vLo, fHi = tl.vHi, t0 = performance.now();
   cancelAnimationFrame(tl.anim);
   const step = now => {
@@ -836,9 +1067,9 @@ function commitWhen() {
 }
 function drawWhenList() {
   const ul = $("#wlist"); if (!ul) return;
-  const lbl = { hit: "within range", close: "close", warm: "warm", far: "far" };
-  const bg = { close: "var(--butter)", warm: "var(--peach)", far: "var(--rose)", hit: "var(--sage)" };
-  ul.innerHTML = [...state.when.guesses].reverse().map(g => `<li class="grow ${g.band === "hit" ? "win" : ""}" style="grid-template-columns:1fr auto 80px">
+  const lbl = { hit: "in range", close: "close", warm: "warm", far: "far" };
+  const bg = { close: "var(--butter)", warm: "var(--peach)", far: "var(--pink)", hit: "var(--mint)" };
+  ul.innerHTML = [...state.when.guesses].reverse().map(g => `<li class="grow ${g.band === "hit" ? "win" : ""}">
     <span class="nm">${fmtYear(g.y)}</span>
     <span class="km">${g.dir === "later" ? "later →" : g.dir === "earlier" ? "← earlier" : "✓"}</span>
     <span class="pct" style="background:${bg[g.band]}">${lbl[g.band]}</span></li>`).join("");
@@ -847,7 +1078,7 @@ function drawWhenList() {
 /* ================= Phase: WHAT ================= */
 let whatSel = null;
 function renderWhat() {
-  $("#phaseBody").innerHTML = `<div class="phase-enter" style="display:flex;flex-direction:column;gap:14px" id="whatWrap"></div>`;
+  $("#phaseBody").innerHTML = `<div class="phase-enter" style="display:flex;flex-direction:column;gap:12px" id="whatWrap"></div>`;
   renderWhatBody();
 }
 function idCost() { return state.what.fnWrong.length === 0 ? COST.idDiscount : COST.id; }
@@ -855,12 +1086,12 @@ function renderWhatBody() {
   const w = state.what, wrap = $("#whatWrap"); if (!wrap) return;
   whatSel = null;
   if (w.step === "fn") {
-    wrap.innerHTML = `<div class="phase-head"><h2>What was it for?</h2><p>First, its function. Each guess costs <b>${COST.fn}</b>. Getting it right first try discounts the final question.</p></div>
+    wrap.innerHTML = `<div class="phase-head"><h2>What was it for?</h2><p>First, its function. Each guess costs <b>${COST.fn}</b>. Right on the first try discounts the final question.</p></div>
       <div class="cats">${CATEGORIES.map(c => `<button class="cat ${w.fnWrong.includes(c) ? "wrong" : ""}" data-c="${esc(c)}" ${w.fnWrong.includes(c) ? "disabled" : ""}>${esc(c)}</button>`).join("")}</div>
       <button class="btn btn-primary" id="whatBtn" disabled>Choose a function<span class="cost">−${COST.fn}</span></button>`;
     wrap.querySelectorAll(".cat").forEach(b => b.addEventListener("click", () => {
       wrap.querySelectorAll(".cat").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); whatSel = b.dataset.c;
-      $("#whatBtn").disabled = false; $("#whatBtn").innerHTML = `Guess “${esc(whatSel)}”${state.bankrupt ? "" : `<span class="cost">−${COST.fn}</span>`}`;
+      $("#whatBtn").disabled = false; $("#whatBtn").innerHTML = `Guess ${esc(whatSel)}${state.bankrupt ? "" : `<span class="cost">−${COST.fn}</span>`}`;
     }));
   } else {
     const c = idCost();
@@ -926,16 +1157,16 @@ function renderDone() {
 }
 function showReveal() {
   const s = score(), [emo, name] = rank(s.total), r = PUZZLE.reveal;
-  modal(`<div class="sheet" role="dialog" aria-modal="true" aria-label="Today's relic">
+  modal(`<div class="sheet box" role="dialog" aria-modal="true" aria-label="Today's relic">
     <div class="reveal-top"><img src="${PUZZLE.image}" alt="${esc(r.title)}, full view">
       <div><div class="eyebrow">Relic #${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.date}</div>
       <h2>${esc(r.title)}</h2>
       <div class="score-big">${s.total}</div><div class="rank">${emo} ${esc(name)}</div></div></div>
     ${r.story.map(p => `<p>${esc(p)}</p>`).join("")}
     <table>${r.facts.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("")}</table>
-    ${s.parts.length ? `<div class="eyebrow">Score</div><table>${s.parts.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="n">${v}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="n"><b>${s.total}</b></td></tr></table>` : ""}
+    ${s.parts.length ? `<div class="eyebrow">Score</div><table>${s.parts.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="n">${v}</td></tr>`).join("")}<tr><td>Total</td><td class="n">${s.total}</td></tr></table>` : ""}
     <pre class="share-pre" id="sharePre">${esc(shareText())}</pre>
-    <div class="row-btns"><button class="btn btn-primary" id="copyBtn">Copy result</button><button class="btn btn-ghost" id="replayBtn">Play again (practice)</button>
+    <div class="row-btns"><button class="btn btn-primary" id="copyBtn">Copy result</button><button class="btn btn-ghost" id="replayBtn">Practice again</button>
     <a href="${r.url}" target="_blank" rel="noopener">View at The Met ↗</a></div></div>`);
   $("#copyBtn").addEventListener("click", () => {
     const txt = shareText();
@@ -957,17 +1188,23 @@ function modal(html, onClose) {
   return close;
 }
 function showHelp() {
-  const rows = [["Where guess", COST.where], ["When guess", COST.when], ["What: function guess", COST.fn], ["What: identity guess", `${COST.id} (${COST.idDiscount} if function right first try)`]];
-  const close = modal(`<div class="sheet" role="dialog" aria-modal="true" aria-label="How to play">
+  const rows = [["Where guess", COST.where], ["When guess", COST.when], ["What: function", COST.fn], ["What: identity", `${COST.id} (${COST.idDiscount} after a first-try function)`]];
+  const close = modal(`<div class="sheet box" role="dialog" aria-modal="true" aria-label="How to play">
     <div class="eyebrow">How to play</div><h2>Find where, when and what</h2>
-    <p>Each day brings one real object from The Met's open-access collection, shown as a tight close-up. Work out <b>where</b> it was made, <b>when</b>, and <b>what</b> it is.</p>
-    <p>You start with <b>100 Insight</b>. Guesses and hints spend it. Every miss pulls the photo back one step, so mistakes reveal more of the object but cost points. Whatever Insight is left becomes your score.</p>
+    <p>Each day brings one real object from The Met's open-access collection, shown as a tight close-up.</p>
+    <p><b>1. Where.</b> Tap a country on the map, then tap it again (or press Guess) to lock it in. Misses light up by how close they were. <b>2. When.</b> Find the right country and the map zooms in. Slide the timeline to the year it was made. <b>3. What.</b> Pick its function, then which object it is.</p>
+    <p>You start with <b>100 Insight</b>. Guesses and hints spend it. Every miss pulls the photo back one step. Whatever Insight is left becomes your score.</p>
     <table class="price-table">${rows.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join("")}</table>
-    <p><b>Momentum.</b> Solve a phase on your first guess for +5 Insight and a free hint in the next phase. Solve it on your second guess for just the free hint.</p>
-    <p><b>Bonuses.</b> +3 for every zoom level you never revealed, and +5 for finding the find-spot. If you run out of Insight you can keep playing for free, but the score drops to 0.</p>
+    <p><b>Momentum.</b> Solve a phase on your first guess for +5 Insight and a free hint in the next phase. On your second guess, just the free hint.</p>
+    <p><b>Bonuses.</b> +3 for every zoom level you never revealed, and +5 for the find-spot. Run out of Insight and you can keep playing for free, but the score drops to 0.</p>
     <div class="row-btns"><button class="btn btn-primary" id="startBtn">${state.where.guesses.length ? "Back to the dig" : "Start digging"}</button></div></div>`,
     () => { if (!state.seenHelp) { state.seenHelp = true; save(); } });
   $("#startBtn").addEventListener("click", close);
+}
+function showNotes() {
+  const close = modal(`<div class="sheet box" role="dialog" aria-modal="true" aria-label="Field notes"><div class="eyebrow">Field notes</div><div class="notes" style="display:flex">${notesHtml()}</div>
+    <div class="row-btns" style="margin-top:12px"><button class="btn btn-primary" id="notesClose">Close</button></div></div>`);
+  $("#notesClose").addEventListener("click", close);
 }
 function showLightbox() {
   modal(`<div class="light-photo"><img src="${PUZZLE.image}" alt="Enlarged close-up of today's relic" draggable="false"></div>`);
@@ -981,22 +1218,29 @@ function resetGame() {
   state = freshState(); state.seenHelp = seen; save();
   $("#modalRoot").innerHTML = "";
   shownInsight = 100; tweenInsight();
-  selectedCountry = null;
-  map.g.select(".pinlayer").selectAll("*").remove();
-  map.svg.transition().duration(800).call(map.zoom.transform, d3.zoomIdentity);
-  redrawOverlays(); renderPhase(); renderZoom();
+  selectedCountry = null; map.focused = false; map.anim = {};
+  syncLabels(); renderPhase(); renderZoom();
+  d3.select(map.cv).transition().duration(800).call(map.zoom.transform, d3.zoomIdentity);
 }
 
 /* ================= Phase router ================= */
 function renderPhase() {
-  renderStepper();
-  if (state.phase === "where") renderWhere();
-  else if (state.phase === "when") renderWhen();
-  else if (state.phase === "what") renderWhat();
-  else renderDone();
-  if (state.phase === "done") { renderZoomFull(); }
-  renderHints(); renderNotes();
-  $("#consoleScroll").scrollTop = 0;
+  const where = state.phase === "where";
+  $("#wherebar").hidden = !where; $("#panel").hidden = where;
+  if (where) renderWhere();
+  else {
+    renderStepper();
+    if (state.phase === "when") renderWhen();
+    else if (state.phase === "what") renderWhat();
+    else renderDone();
+    $("#panelScroll").scrollTop = 0;
+  }
+  if (state.phase === "done") renderZoomFull();
+  renderHints(); renderNotes(); requestRender();
+  if (!where && !map.focused && map.base) {
+    map.focused = true;
+    requestAnimationFrame(() => fitCountry(map.byName.get(PUZZLE.country.toLowerCase()), 1400));
+  }
 }
 function renderZoomFull() {
   const img = $("#relicImg"); img.style.transform = "scale(1) translate(0,0)";
@@ -1008,13 +1252,16 @@ async function start(data) {
   state = (data && data.state) || load() || freshState();
   shownInsight = state.insight;
   $("#issue").textContent = `No. ${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.date}`;
+  $("#cardHead").textContent = `Exhibit #${PUZZLE.no}`;
   $("#insightNum").textContent = state.insight; tweenInsight();
+  $("#fx").innerHTML = Array.from({ length: 22 }, () => `<i class="tw" style="left:${(Math.random() * 100).toFixed(1)}%;top:${(Math.random() * 100).toFixed(1)}%;animation-delay:${(Math.random() * 5).toFixed(2)}s"></i>`).join("");
   renderZoom();
   $("#helpBtn").addEventListener("click", showHelp);
-  $("#polaroid").addEventListener("click", showLightbox);
+  $("#photoBtn").addEventListener("click", showLightbox);
+  $("#notesBtn").addEventListener("click", showNotes);
   try { await initMap(); } catch (e) { toast("The map couldn't load. Refresh to try again.", 5000); }
+  syncLabels();
   renderPhase();
-  if (state.where.solved && map.proj) flyTo(PUZZLE.target, 3.2);
   if (state.phase === "done") renderZoomFull();
   if (!state.seenHelp) showHelp();
 }
