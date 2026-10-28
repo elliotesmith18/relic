@@ -44,6 +44,7 @@
   --font-display: "Pixelify Sans", ui-monospace, monospace;
   --font-label: "Silkscreen", ui-monospace, monospace;
   --font-ui: "VT323", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-num: "VT323", ui-monospace, "SF Mono", Menlo, monospace;
   --ease: cubic-bezier(.2,.8,.2,1);
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -57,7 +58,7 @@ b { font-weight: 400; color: var(--butter); }
 
 /* ---------- Map ---------- */
 #map { position: absolute; left: 0; top: 0; display: block; cursor: grab; touch-action: none; image-rendering: crisp-edges; image-rendering: pixelated; }
-#map:active { cursor: grabbing; }
+#map.dragging { cursor: grabbing; }
 #map.over { cursor: pointer; }
 .fx { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
   background: repeating-linear-gradient(to bottom, rgba(0,0,0,.13) 0 1px, transparent 1px 3px), radial-gradient(ellipse at center, transparent 58%, rgba(2,5,15,.6) 100%); }
@@ -261,6 +262,19 @@ b { font-weight: 400; color: var(--butter); }
 .light-photo { width: min(78vw, 440px); aspect-ratio: 3/4; max-width: 100%; position: relative; overflow: hidden; border: 8px solid var(--panel); box-shadow: 0 0 0 2px var(--frame), var(--drop); background: #1a2546; }
 .light-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; }
 
+/* Numbers: the blocky display fonts blur 2/5/S together, so every figure uses VT323's clear terminal digits. */
+.insight .num { font-family: var(--font-num); font-size: 32px; font-weight: 400; line-height: 1; }
+.yearval { font-family: var(--font-num); font-weight: 400; font-size: 72px; line-height: .8; }
+.score-big { font-family: var(--font-num); font-weight: 400; font-size: 84px; line-height: .85; }
+.floater { font-family: var(--font-num); font-size: 24px; }
+.brand .issue, .card-head, .sheet .eyebrow { font-family: var(--font-num); font-size: 17px; letter-spacing: .08em; }
+.heat-chip { font-family: var(--font-num); font-size: 20px; padding: 0 6px; }
+.mlabel b { font-family: var(--font-num); font-size: 16px; line-height: 1; }
+.hint .p, .btn .cost, .btn .num { font-family: var(--font-num); font-size: 20px; letter-spacing: 0; }
+.tl-mark { font-family: var(--font-num); font-size: 16px; padding: 0 4px; }
+.free-badge, .notes-btn { font-family: var(--font-num); font-size: 17px; }
+.wb-prompt .t { font-family: var(--font-num); font-size: 22px; letter-spacing: .04em; }
+
 /* ---------- Narrower desktops: where bar on two rows ---------- */
 @media (max-width: 1179px) {
   .wherebar { width: min(760px, calc(100% - 32px)); grid-template-columns: minmax(0, 1fr) 220px; grid-template-areas: "status search" "hints hints"; }
@@ -286,8 +300,8 @@ b { font-weight: 400; color: var(--butter); }
   @keyframes panelInM { from { opacity: 0; transform: translateY(40px); } }
   .stepper, .panel-scroll { padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px)); }
   .reveal-top { grid-template-columns: 110px 1fr; gap: 14px; }
-  .score-big { font-size: 44px; }
-  .yearval { font-size: 44px; }
+  .score-big { font-size: 64px; }
+  .yearval { font-size: 58px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -495,7 +509,7 @@ function zoomOut() { if (state.zoom > 0) { state.zoom--; renderZoom(); } }
    edge is a hard pixel step: countries are scanline-filled into an id buffer, then borders, coasts
    and the sea are derived from neighbouring ids. The id buffer doubles as the click hit-test. */
 const PAL = {
-  space: "#070e22", sea: "#0e1d42", seaDot: "#1a2d5e", seaRing: "#16306a", shallow: "#1d3d78", rim: "#22386e",
+  space: "#070e22", sea: "#11234d", sea2: "#0e1d42", sea3: "#0b1736", glow1: "#2b5aa8", glow2: "#183a78", star: "#8fb3e8", seaDot: "#1a2d5e", seaRing: "#16306a", shallow: "#1d3d78", rim: "#22386e",
   border: "#2a3558", selEdge: "#ffffff",
   land: ["#efe4c8", "#e8d4ae", "#d5e3bd", "#eed2c5", "#d7d5ee"],
   dim: "#2b3b66", hover: "#fffaf0", sel: "#fff2a8",
@@ -521,7 +535,8 @@ const PIN = [
   "....X...."
 ];
 
-const map = { cv: null, ctx: null, P: 3, w: 0, h: 0, base: null, proj: null, s0: 1, t0: [0, 0], t: d3.zoomIdentity, zoom: null,
+// view: the globe's centre (lon/lat), zoom k (1 = whole globe fits) and screen centre cx/cy in CSS px.
+const map = { cv: null, ctx: null, P: 3, w: 0, h: 0, proj: null, s0: 1, view: { lon: 20, lat: 18, k: 1, cx: 0, cy: 0 }, fly: 0, spin: true, vel: null,
   countries: [], byName: new Map(), hover: 0, raf: 0, anim: {}, focused: false, labelEls: [] };
 
 const collector = { rings: null, cur: null, moveTo(x, y) { this.cur = [x, y]; this.rings.push(this.cur); }, lineTo(x, y) { this.cur.push(x, y); }, closePath() {}, arc() {}, beginPath() {} };
@@ -615,26 +630,72 @@ async function initMap() {
   map.graticule = d3.geoGraticule10();
   map.ringGeo = d3.geoCircle().center(PUZZLE.ringCenter).radius(1000 / R_KM * 180 / Math.PI)();
   map.cv = $("#map"); map.ctx = map.cv.getContext("2d");
-  const sel = d3.select(map.cv);
-  map.zoom = d3.zoom().scaleExtent([1, 14]).on("zoom", ev => { map.t = ev.transform; requestRender(); });
-  sel.call(map.zoom).on("dblclick.zoom", null);
-  map.cv.addEventListener("click", e => {
-    const id = pickId(e.clientX, e.clientY);
-    if (id) onCountryClick(map.countries[id - 1]);
-    else if (selectedCountry && state.phase === "where") { selectedCountry = null; drawStatus(); requestRender(); }
-  });
-  map.cv.addEventListener("pointermove", e => {
-    if (e.pointerType !== "mouse") return;
-    const id = e.buttons ? 0 : pickId(e.clientX, e.clientY), tip = $("#tip");
-    if (id) { tip.hidden = false; tip.textContent = map.countries[id - 1].name; tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 16) + "px"; }
-    else tip.hidden = true;
-    map.cv.classList.toggle("over", !!id && state.phase === "where");
-    if (id !== map.hover) { map.hover = id; if (state.phase === "where") requestRender(); }
-  });
-  map.cv.addEventListener("pointerleave", () => { $("#tip").hidden = true; if (map.hover) { map.hover = 0; requestRender(); } });
+  bindGlobe();
+  map.spin = state.phase === "where" && !state.where.guesses.length && !reduced();
   layoutMap();
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(layoutMap, 150); });
 }
+
+/* Drag spins the globe, wheel / pinch zoom, a short tap picks a country. */
+function bindGlobe() {
+  const cv = map.cv, ptrs = new Map();
+  let tap = null, pinch = 0, last = null;
+  const degPerPx = () => 180 / (Math.PI * map.s0 * map.view.k * map.P);
+  const stopMotion = () => { map.spin = false; map.vel = null; cancelAnimationFrame(map.fly); map.fly = 0; };
+  cv.addEventListener("pointerdown", e => {
+    cv.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    stopMotion(); $("#tip").hidden = true;
+    tap = ptrs.size === 1 ? { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 } : null;
+    if (ptrs.size === 2) { const [p1, p2] = [...ptrs.values()]; pinch = Math.hypot(p1.x - p2.x, p1.y - p2.y); }
+    last = { t: performance.now(), vx: 0, vy: 0 };
+  });
+  cv.addEventListener("pointermove", e => {
+    const pt = ptrs.get(e.pointerId);
+    if (!pt) { hoverAt(e); return; }
+    const dx = e.clientX - pt.x, dy = e.clientY - pt.y;
+    pt.x = e.clientX; pt.y = e.clientY;
+    if (ptrs.size === 2) {
+      const [p1, p2] = [...ptrs.values()], d = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      if (pinch) setZoom(map.view.k * d / pinch);
+      pinch = d; tap = null; return;
+    }
+    if (tap) { tap.moved += Math.abs(dx) + Math.abs(dy); if (tap.moved < 6) return; }
+    const s = degPerPx(), now = performance.now(), dt = Math.max(12, now - last.t);
+    map.view.lon -= dx * s;
+    map.view.lat = Math.max(-80, Math.min(80, map.view.lat + dy * s));
+    last = { t: now, vx: -dx * s / dt, vy: dy * s / dt };
+    cv.classList.add("dragging"); requestRender();
+  });
+  const end = e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.delete(e.pointerId); cv.classList.remove("dragging");
+    if (ptrs.size) { pinch = 0; return; }
+    if (tap && tap.moved < 6 && performance.now() - tap.t < 600) {
+      const id = pickId(e.clientX, e.clientY);
+      if (id) onCountryClick(map.countries[id - 1]);
+      else if (selectedCountry && state.phase === "where") { selectedCountry = null; drawStatus(); requestRender(); }
+    } else if (last && performance.now() - last.t < 80 && !reduced()) {
+      const cap = v => Math.max(-2.5, Math.min(2.5, v * 16));
+      map.vel = { lon: cap(last.vx), lat: cap(last.vy) * .5 };   // flick: keep spinning and ease out
+      requestRender();
+    }
+    tap = null;
+  };
+  cv.addEventListener("pointerup", end);
+  cv.addEventListener("pointercancel", end);
+  cv.addEventListener("wheel", e => { e.preventDefault(); stopMotion(); setZoom(map.view.k * Math.exp(-e.deltaY * .0016)); }, { passive: false });
+  cv.addEventListener("pointerleave", () => { $("#tip").hidden = true; if (map.hover) { map.hover = 0; requestRender(); } });
+}
+function hoverAt(e) {
+  if (e.pointerType !== "mouse") return;
+  const id = pickId(e.clientX, e.clientY), tip = $("#tip");
+  if (id) { tip.hidden = false; tip.textContent = map.countries[id - 1].name; tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 16) + "px"; }
+  else tip.hidden = true;
+  map.cv.classList.toggle("over", !!id && state.phase === "where");
+  if (id !== map.hover) { map.hover = id; if (state.phase === "where") requestRender(); }
+}
+function setZoom(k) { map.view.k = Math.max(.8, Math.min(14, k)); requestRender(); }
 function layoutMap() {
   if (!map.cv) return;
   const W = innerWidth, H = innerHeight, P = map.P = W < 600 ? 2 : 3;
@@ -644,16 +705,10 @@ function layoutMap() {
   map.img = map.ctx.createImageData(w, h);
   map.buf = new Uint32Array(map.img.data.buffer);
   map.ids = new Uint16Array(w * h); map.sea = new Uint8Array(w * h); map.grat = new Uint8Array(w * h); map.rmask = new Uint8Array(w * h);
-  const top = (W < 900 ? 60 : 66) / P, bot = (W < 900 ? 112 : W < 1180 ? 130 : 80) / P;
-  map.base = d3.geoNaturalEarth1().fitExtent([[10 / P, top], [w - 10 / P, h - bot]], { type: "Sphere" });
-  map.s0 = map.base.scale(); map.t0 = map.base.translate();
-  map.zoom.extent([[0, 0], [W, H]]).translateExtent([[-W * .4, -H * .4], [W * 1.4, H * 1.4]]);
-  // Phones are tall and narrow: open zoomed in so the world fills the screen instead of a thin strip.
-  if (W < 600 && map.t.k === 1 && state.phase === "where") {
-    const q = map.base([40, 25]);
-    map.t = d3.zoomIdentity.translate(W / 2, (top * P + H - bot * P) / 2).scale(1.9).translate(-q[0] * P, -q[1] * P);
-    d3.select(map.cv).call(map.zoom.transform, map.t);
-  }
+  // Globe radius at k = 1 fills the space between the top bar and the where-bar.
+  const top = W < 900 ? 60 : 66, bot = W < 900 ? 112 : W < 1180 ? 130 : 84;
+  map.s0 = Math.min(W - 24, H - top - bot) / 2 * .96 / P;
+  if (!map.fly) { const r = focusRect(); map.view.cx = (r.x0 + r.x1) / 2; map.view.cy = (r.y0 + r.y1) / 2; }
   requestRender();
 }
 function requestRender() { if (map.cv && !map.raf) map.raf = requestAnimationFrame(render); }
@@ -671,25 +726,35 @@ function countryFills() {
   });
   return { fill, selId };
 }
-function render() {
+function render(now) {
   map.raf = 0;
-  const { w, h, P, ids, sea, grat, rmask, buf } = map, t = map.t;
-  const proj = map.proj = d3.geoNaturalEarth1().scale(map.s0 * t.k).translate([t.x / P + t.k * map.t0[0], t.y / P + t.k * map.t0[1]]);
+  const { w, h, P, ids, sea, grat, rmask, buf } = map, v = map.view;
+  let moving = false;
+  if (map.spin) { v.lon += .12; moving = true; }
+  if (map.vel) {
+    v.lon += map.vel.lon; v.lat = Math.max(-80, Math.min(80, v.lat + map.vel.lat));
+    map.vel.lon *= .93; map.vel.lat *= .93;
+    if (Math.abs(map.vel.lon) + Math.abs(map.vel.lat) < .02) map.vel = null; else moving = true;
+  }
+  v.lon = ((v.lon + 540) % 360) - 180;
+  const R = map.s0 * v.k, cx = v.cx / P, cy = v.cy / P;
+  const proj = map.proj = d3.geoOrthographic().clipAngle(90).precision(.3).rotate([-v.lon, -v.lat]).scale(R).translate([cx, cy]);
   const path = d3.geoPath(proj, collector);
   ids.fill(0); sea.fill(0); grat.fill(0); rmask.fill(0);
   scanFill(ringsOf(path, { type: "Sphere" }), p => { sea[p] = 1; });
   for (const r of ringsOf(path, map.graticule)) strokeRing(r, false, (x, y) => { if (((x + y) & 1) === 0) grat[y * w + x] = 1; });
   map.countries.forEach((c, i) => {
     const id = i + 1;
-    if (!scanFill(ringsOf(path, c.f), p => { ids[p] = id; })) {
+    if (!scanFill(ringsOf(path, c.f), p => { ids[p] = id; }) && isFront(c.centroid)) {
       // Keep tiny countries visible (and clickable) as at least one pixel.
-      const q = proj(c.centroid);
-      if (q) { const x = Math.floor(q[0]), y = Math.floor(q[1]); if (x >= 0 && x < w && y >= 0 && y < h && !ids[y * w + x]) ids[y * w + x] = id; }
+      const q = proj(c.centroid), x = Math.floor(q[0]), y = Math.floor(q[1]);
+      if (x >= 0 && x < w && y >= 0 && y < h && !ids[y * w + x]) ids[y * w + x] = id;
     }
   });
   let ringRings = null;
   if (state.used.ring) { ringRings = ringsOf(path, map.ringGeo); scanFill(ringRings, p => { rmask[p] = 1; }); }
   const { fill, selId } = countryFills();
+  const R2 = R * R;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const p = y * w + x, id = ids[p];
     if (id) {
@@ -699,18 +764,24 @@ function render() {
     } else if (sea[p]) {
       const near = (x + 1 < w && ids[p + 1]) || (x && ids[p - 1]) || (y + 1 < h && ids[p + w]) || (y && ids[p - w]);
       const rim = (x + 1 < w && !sea[p + 1]) || (x && !sea[p - 1]) || (y + 1 < h && !sea[p + w]) || (y && !sea[p - w]);
-      buf[p] = near ? C.shallow : rim ? C.rim : grat[p] ? C.seaDot : rmask[p] ? C.seaRing : C.sea;
-    } else buf[p] = C.space;
+      // Banded shading towards the limb makes the flat disc read as a sphere.
+      const dd = ((x + .5 - cx) ** 2 + (y + .5 - cy) ** 2) / R2;
+      buf[p] = near ? C.shallow : rim ? C.rim : grat[p] ? C.seaDot : rmask[p] ? C.seaRing : dd > .86 ? C.sea3 : dd > .55 ? C.sea2 : C.sea;
+    } else {
+      const d = Math.sqrt((x + .5 - cx) ** 2 + (y + .5 - cy) ** 2) - R;
+      buf[p] = d < 3 ? C.glow1 : d < 7 && ((x + y) & 1) ? C.glow2 : (((x * 73856093) ^ (y * 19349663)) >>> 0) % 397 === 0 ? C.star : C.space;
+    }
   }
   if (ringRings) { let k = 0; for (const r of ringRings) strokeRing(r, true, (x, y) => { if ((k++ % 6) < 4) setPx(x, y, C.ring); }); }
   const animating = drawPin(performance.now());
   map.ctx.putImageData(map.img, 0, 0);
   placeLabels();
-  if (animating) requestRender();
+  if (animating || moving) requestRender();
 }
+function isFront(lonlat) { return d3.geoDistance(lonlat, [map.view.lon, map.view.lat]) < Math.PI / 2 - .02; }
 function drawPin(now) {
-  if (!state.where.solved) return false;
-  const q = map.proj(PUZZLE.target); if (!q) return false;
+  if (!state.where.solved || !isFront(PUZZLE.target)) return false;
+  const q = map.proj(PUZZLE.target);
   const px = Math.floor(q[0]), py = Math.floor(q[1]);
   let dy = 0, animating = false;
   const a = map.anim.pin;
@@ -750,7 +821,9 @@ function syncLabels() {
 function placeLabels() {
   if (!map.proj) return;
   for (const { el, o } of map.labelEls) {
-    const win = o.name === PUZZLE.country, q = map.proj(win ? PUZZLE.target : o.centroid); if (!q) continue;
+    const win = o.name === PUZZLE.country, pt = win ? PUZZLE.target : o.centroid;
+    el.hidden = !isFront(pt); if (el.hidden) continue;
+    const q = map.proj(pt);
     el.style.transform = `translate(${Math.round(q[0] * map.P)}px, ${Math.round(q[1] * map.P + (win ? 20 : 0))}px) translate(-50%, -50%)`;
   }
 }
@@ -759,16 +832,30 @@ function focusRect() {
   const el = !pan.hidden ? pan : !bar.hidden ? bar : null;
   return { x0: 12, y0: 70, x1: W - 12, y1: el ? el.getBoundingClientRect().top - 10 : H - 12 };
 }
-function flyToPx(pt, k, dur = 1100) {
-  const r = focusRect();
-  const t = d3.zoomIdentity.translate((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2).scale(k).translate(-pt[0], -pt[1]);
-  d3.select(map.cv).transition().duration(reduced() ? 0 : dur).ease(d3.easeCubicInOut).call(map.zoom.transform, t);
+// Animate the globe so lonlat sits in the middle of the visible area at zoom k (great-circle path).
+function flyTo(lonlat, k, dur = 1100) {
+  map.spin = false; map.vel = null; cancelAnimationFrame(map.fly);
+  const v = map.view, r = focusRect(), from = { ...v };
+  const to = { k, cx: (r.x0 + r.x1) / 2, cy: (r.y0 + r.y1) / 2 };
+  const geo = d3.geoInterpolate([from.lon, from.lat], lonlat), t0 = performance.now();
+  const step = now => {
+    const t = reduced() ? 1 : Math.min(1, (now - t0) / dur), e = d3.easeCubicInOut(t);
+    [v.lon, v.lat] = geo(e);
+    // Zoom out a little mid-flight for long hops, like a camera pulling back.
+    const hop = d3.geoDistance([from.lon, from.lat], lonlat), dip = Math.min(.45, hop / 4) * Math.sin(Math.PI * e);
+    v.k = (from.k + (to.k - from.k) * e) * (1 - dip);
+    v.cx = from.cx + (to.cx - from.cx) * e; v.cy = from.cy + (to.cy - from.cy) * e;
+    requestRender();
+    map.fly = t < 1 ? requestAnimationFrame(step) : 0;
+  };
+  map.fly = requestAnimationFrame(step);
 }
-function flyTo(lonlat, k) { const q = map.base(lonlat); flyToPx([q[0] * map.P, q[1] * map.P], k); }
 function fitCountry(o, dur) {
-  const P = map.P, [[x0, y0], [x1, y1]] = d3.geoPath(map.base).bounds(o.main), r = focusRect();
-  const k = Math.max(1.5, Math.min(12, .7 * Math.min((r.x1 - r.x0) / ((x1 - x0) * P), (r.y1 - r.y0) / ((y1 - y0) * P))));
-  flyToPx([(x0 + x1) / 2 * P, (y0 + y1) / 2 * P], k, dur);
+  // Angular radius of the country around its centroid, then the zoom that makes it ~70% of the view.
+  let a = 0; d3.geoStream(o.main, { point: (x, y) => { a = Math.max(a, d3.geoDistance(o.centroid, [x, y])); }, lineStart() {}, lineEnd() {}, polygonStart() {}, polygonEnd() {}, sphere() {} });
+  const r = focusRect(), span = Math.min(r.x1 - r.x0, r.y1 - r.y0) * .35;
+  const k = Math.max(1, Math.min(12, span / (map.s0 * map.P * Math.sin(Math.min(a, Math.PI / 2)))));
+  flyTo(o.centroid, k, dur);
 }
 
 /* ================= Stepper ================= */
@@ -903,7 +990,7 @@ function pickSuggest(n) {
   const inp = $("#whereInput"); inp.value = ""; closeSuggest(); inp.blur();
   if (state.where.guesses.some(g => g.name === n)) { toast(`You already guessed ${n}`); return; }
   selectedCountry = n; drawStatus(); requestRender();
-  flyTo(map.byName.get(n.toLowerCase()).centroid, Math.max(map.t.k, 2.4));
+  flyTo(map.byName.get(n.toLowerCase()).centroid, Math.max(map.view.k, 2.4));
 }
 function commitWhere() {
   const name = selectedCountry;
@@ -1000,7 +1087,7 @@ function setYear(v, snap) {
   yv.textContent = Math.abs(v);
   $("#eraBce").classList.toggle("on", v < 0); $("#eraCe").classList.toggle("on", v > 0);
   $("#tlHandle").setAttribute("aria-valuenow", v); $("#tlHandle").setAttribute("aria-valuetext", fmtYear(v));
-  const b = $("#whenBtn"); if (b) b.innerHTML = `Guess ${fmtYear(v)}${state.bankrupt ? "" : `<span class="cost">−${COST.when}</span>`}`;
+  const b = $("#whenBtn"); if (b) b.innerHTML = `Guess <span class="num">${fmtYear(v)}</span>${state.bankrupt ? "" : `<span class="cost">−${COST.when}</span>`}`;
   tlPlaceHandle();
 }
 const pctX = v => ((v - tl.vLo) / (tl.vHi - tl.vLo)) * 100;
@@ -1183,7 +1270,7 @@ function showHelp() {
   const close = modal(`<div class="sheet box" role="dialog" aria-modal="true" aria-label="How to play">
     <div class="eyebrow">How to play</div><h2>Find where, when and what</h2>
     <p>Each day brings one real object from The Met's open-access collection, shown as a tight close-up.</p>
-    <p><b>1. Where.</b> Tap a country on the map, then tap it again (or press Guess) to lock it in. Misses light up by how close they were. <b>2. When.</b> Find the right country and the map zooms in. Slide the timeline to the year it was made. <b>3. What.</b> Pick its function, then which object it is.</p>
+    <p><b>1. Where.</b> Drag to spin the globe, and scroll or pinch to zoom. Tap a country, then tap it again (or press Guess) to lock it in. Misses light up by how close they were. <b>2. When.</b> Find the right country and the map zooms in. Slide the timeline to the year it was made. <b>3. What.</b> Pick its function, then which object it is.</p>
     <p>You start with <b>100 Insight</b>. Guesses and hints spend it. Every miss pulls the photo back one step. Whatever Insight is left becomes your score.</p>
     <table class="price-table">${rows.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join("")}</table>
     <p><b>Momentum.</b> Solve a phase on your first guess for +5 Insight and a free hint in the next phase. On your second guess, just the free hint.</p>
@@ -1211,7 +1298,7 @@ function resetGame() {
   shownInsight = 100; tweenInsight();
   selectedCountry = null; map.focused = false; map.anim = {};
   syncLabels(); renderPhase(); renderZoom();
-  d3.select(map.cv).transition().duration(800).call(map.zoom.transform, d3.zoomIdentity);
+  flyTo([20, 18], 1, 900);
 }
 
 /* ================= Phase router ================= */
@@ -1228,7 +1315,7 @@ function renderPhase() {
   }
   if (state.phase === "done") renderZoomFull();
   renderHints(); renderNotes(); requestRender();
-  if (!where && !map.focused && map.base) {
+  if (!where && !map.focused && map.cv) {
     map.focused = true;
     requestAnimationFrame(() => fitCountry(map.byName.get(PUZZLE.country.toLowerCase()), 1400));
   }
