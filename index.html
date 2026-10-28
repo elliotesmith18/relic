@@ -316,7 +316,7 @@ b { font-weight: 400; color: var(--butter); }
 
   <aside class="relic-card box" id="relicCard">
     <div class="card-head" id="cardHead">Exhibit</div>
-    <button class="photo" id="photoBtn" aria-label="Enlarge the relic photo"><img id="relicImg" src="relic.jpg" alt="A close-up detail of today's relic" draggable="false"></button>
+    <button class="photo" id="photoBtn" aria-label="Enlarge the relic photo"><img id="relicImg" alt="A close-up detail of today's relic" draggable="false"></button>
     <div class="card-foot"><span class="zl">ZOOM</span><span class="zoompips" id="zoomPips"></span><button class="notes-btn" id="notesBtn" hidden>NOTES</button></div>
     <div class="notes" id="notes"></div>
   </aside>
@@ -340,56 +340,18 @@ b { font-weight: 400; color: var(--butter); }
 <script>
 "use strict";
 
-/* ================= Puzzle data ================= */
-const PUZZLE = {
-  no: "001", day: "Tuesday", date: "27 Oct 2026",
-  image: "relic.jpg",
-  // zoom level 0 (full object) .. 5 (tightest); x/y = focal point as fraction of the photo
-  zooms: [
-    { x: .50, y: .50, s: 1 },
-    { x: .50, y: .52, s: 1.3 },
-    { x: .50, y: .42, s: 1.9 },
-    { x: .49, y: .47, s: 2.8 },
-    { x: .36, y: .57, s: 4 },
-    { x: .60, y: .60, s: 6 }
-  ],
-  country: "China",
-  target: [117.18, 29.27],          // Jingdezhen kilns, Jiangxi
-  yearLo: 1426, yearHi: 1435, tolerance: 30,
-  fn: "Vessel",
-  options: [
-    "Export ginger jar made for the Dutch East India Company trade",
-    "Imperial jar with a dragon among clouds, made for the Xuande emperor's court",
-    "Tea-leaf storage jar made for a Japanese tea master",
-    "Funerary urn made for a Joseon Korean scholar-official"
-  ],
-  answer: 1, eliminate: [0, 3],
-  ringCenter: [112.0, 32.0],
-  hintText: {
-    material: "Porcelain, painted in cobalt blue under a clear glaze.",
-    continent: "Asia. Countries outside it are faded on the map.",
-    ring: "Made somewhere inside the dashed 1,000 km ring.",
-    era: "Early Ming dynasty, the era of Zheng He's treasure fleets.",
-    halve: "The window on the timeline has been cut in half.",
-    note: "Brushed in imported cobalt, and signed with the name of the reign that made it."
-  },
-  reveal: {
-    title: "Jar with dragon",
-    facts: [
-      ["Culture", "China, Ming dynasty (1368–1644)"],
-      ["Date", "Xuande mark and period (1426–35)"],
-      ["Made at", "Imperial kilns of Jingdezhen, Jiangxi province"],
-      ["Medium", "Porcelain painted with cobalt blue under transparent glaze"],
-      ["Size", "H. 48.3 cm (19 in.)"],
-      ["Credit", "The Met, Gift of Robert E. Tod, 1937 (37.191.1)"]
-    ],
-    story: [
-      "This jar comes from the short reign of the Xuande emperor, when the imperial kilns at Jingdezhen made some of the finest blue-and-white porcelain ever fired.",
-      "The deep, slightly speckled blue is cobalt brushed onto the raw clay, likely imported from the Middle East, then sealed under a clear glaze. The dragon twisting through clouds was an emblem of the emperor, and the small line of characters near the rim is the reign mark."
-    ],
-    url: "https://www.metmuseum.org/art/collection/search/39666"
-  }
-};
+/* ================= Puzzle data =================
+   puzzles.json holds one puzzle per start date; the newest one whose date has arrived (local time) is today's. */
+let PUZZLE, PUZZLES = [];
+const localISO = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function todayISO() {
+  // Testing only: ?date=YYYY-MM-DD works on a local server, never on the live site.
+  const q = new URLSearchParams(location.search).get("date");
+  if (q && /^\d{4}-\d{2}-\d{2}$/.test(q) && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return q;
+  return localISO();
+}
+function puzzleFor(iso) { return [...PUZZLES].reverse().find(p => p.date <= iso) || PUZZLES[0]; }
+function dateLabel(iso) { return new Date(iso + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
 const CATEGORIES = ["Weapon", "Vessel", "Adornment", "Ritual", "Tool", "Currency", "Writing", "Instrument", "Textile", "Funerary", "Toy / Game", "Furniture"];
 const COST = { where: 10, when: 10, fn: 8, id: 12, idDiscount: 8 };
 const HINTS = {
@@ -429,8 +391,20 @@ const ALIASES = {
   "swaziland": "Eswatini", "east timor": "Timor-Leste", "bosnia": "Bosnia and Herzegovina"
 };
 const EXCLUDE = new Set(["Antarctica", "Fr. S. Antarctic Lands"]);
-const ASIA = new Set(["Afghanistan","Armenia","Azerbaijan","Bangladesh","Bhutan","Brunei","Cambodia","China","Georgia","India","Indonesia","Iran","Iraq","Israel","Japan","Jordan","Kazakhstan","Kuwait","Kyrgyzstan","Laos","Lebanon","Malaysia","Mongolia","Myanmar","Nepal","North Korea","Oman","Pakistan","Palestine","Philippines","Qatar","Russia","Saudi Arabia","South Korea","Sri Lanka","Syria","Taiwan","Tajikistan","Thailand","Timor-Leste","Turkey","Turkmenistan","United Arab Emirates","Uzbekistan","Vietnam","Yemen"]);
+const CONTINENTS = {};
+CONTINENTS.Asia = new Set(["Afghanistan","Armenia","Azerbaijan","Bangladesh","Bhutan","Brunei","Cambodia","China","Georgia","India","Indonesia","Iran","Iraq","Israel","Japan","Jordan","Kazakhstan","Kuwait","Kyrgyzstan","Laos","Lebanon","Malaysia","Mongolia","Myanmar","Nepal","North Korea","Oman","Pakistan","Palestine","Philippines","Qatar","Russia","Saudi Arabia","South Korea","Sri Lanka","Syria","Taiwan","Tajikistan","Thailand","Timor-Leste","Turkey","Turkmenistan","United Arab Emirates","Uzbekistan","Vietnam","Yemen"]);
+CONTINENTS.Africa = new Set(["Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cameroon","Central African Republic","Chad","Congo","DR Congo","Côte d'Ivoire","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Morocco","Mozambique","Namibia","Niger","Nigeria","Rwanda","Senegal","Sierra Leone","Somalia","Somaliland","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Western Sahara","Zambia","Zimbabwe"]);
+CONTINENTS.Europe = new Set(["Albania","Austria","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria","Croatia","Cyprus","Northern Cyprus","Czechia","Denmark","Estonia","Finland","France","Germany","Greece","Hungary","Iceland","Ireland","Italy","Kosovo","Latvia","Lithuania","Luxembourg","Moldova","Montenegro","Netherlands","North Macedonia","Norway","Poland","Portugal","Romania","Russia","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland","Turkey","Ukraine","United Kingdom"]);
+CONTINENTS["South America"] = new Set(["Argentina","Bolivia","Brazil","Chile","Colombia","Ecuador","Falkland Islands","Guyana","Paraguay","Peru","Suriname","Uruguay","Venezuela"]);
+CONTINENTS["North America"] = new Set(["Bahamas","Belize","Canada","Costa Rica","Cuba","Dominican Republic","El Salvador","Greenland","Guatemala","Haiti","Honduras","Jamaica","Mexico","Nicaragua","Panama","Puerto Rico","Trinidad and Tobago","United States"]);
+CONTINENTS.Oceania = new Set(["Australia","Fiji","New Caledonia","New Zealand","Papua New Guinea","Solomon Islands","Vanuatu"]);
 const R_KM = 6371;
+function fmtRange(lo, hi) {
+  if (lo === hi) return fmtYear(lo);
+  if (lo < 0 && hi < 0) return `${-lo}–${-hi} BCE`;
+  if (lo > 0 && Math.floor(lo / 100) === Math.floor(hi / 100)) return `${lo}–${String(hi).slice(2)}`;
+  return `${fmtYear(lo)}–${fmtYear(hi)}`;
+}
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
 function bearing(a, b) {
   const [l1, p1] = a.map(toRad), [l2, p2] = b.map(toRad);
@@ -443,7 +417,7 @@ function heat(pct) { return { burn: "var(--coral)", hot: "var(--peach)", warm: "
 function heatEmoji(pct) { return pct >= 94 ? "🟥" : pct >= 85 ? "🟧" : pct >= 70 ? "🟨" : "🟦"; }
 
 /* ================= State ================= */
-const STORE_KEY = "relic-" + PUZZLE.no;
+let STORE_KEY;
 function freshState() {
   return {
     v: 1, phase: "where", insight: 100, zoom: 5, bankrupt: false, hintsUsed: 0,
@@ -691,7 +665,7 @@ function countryFills() {
     const id = i + 1, g = guessed.get(c.name);
     fill[id] = g ? (g.correct ? C.win : C[heatKey(g.pct)])
       : id === selId ? C.sel
-      : state.used.continent && !ASIA.has(c.name) ? C.dim
+      : state.used.continent && !CONTINENTS[PUZZLE.continent]?.has(c.name) ? C.dim
       : id === map.hover && state.phase === "where" ? C.hover
       : C.land[c.tint];
   });
@@ -802,7 +776,7 @@ function renderStepper(ripple) {
   const w = state.where, wh = state.when, wt = state.what;
   const chips = [
     { k: "where", t: "Where", s: w.solved ? PUZZLE.country : `${w.guesses.length} guesses` },
-    { k: "when", t: "When", s: wh.solved ? `${PUZZLE.yearLo}–${String(PUZZLE.yearHi).slice(2)}` : `${wh.guesses.length} guess${wh.guesses.length === 1 ? "" : "es"}` },
+    { k: "when", t: "When", s: wh.solved ? fmtRange(PUZZLE.yearLo, PUZZLE.yearHi) : `${wh.guesses.length} guess${wh.guesses.length === 1 ? "" : "es"}` },
     { k: "what", t: "What", s: wt.solved ? PUZZLE.fn : (state.phase === "when" ? "Locked" : (wt.step === "fn" ? "Function" : "Identity")) }
   ];
   $("#stepper").innerHTML = chips.map(c => {
@@ -1176,7 +1150,7 @@ function showReveal() {
   const s = score(), [emo, name] = rank(s.total), r = PUZZLE.reveal;
   modal(`<div class="sheet box" role="dialog" aria-modal="true" aria-label="Today's relic">
     <div class="reveal-top"><img src="${PUZZLE.image}" alt="${esc(r.title)}, full view">
-      <div><div class="eyebrow">Relic #${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.date}</div>
+      <div><div class="eyebrow">Relic #${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.dateText}</div>
       <h2>${esc(r.title)}</h2>
       <div class="score-big">${s.total}</div><div class="rank">${emo} ${esc(name)}</div></div></div>
     ${r.story.map(p => `<p>${esc(p)}</p>`).join("")}
@@ -1266,9 +1240,16 @@ function renderZoomFull() {
 
 /* ================= Boot ================= */
 async function start(data) {
-  state = (data && data.state) || load() || freshState();
+  try {
+    PUZZLES = (await fetch("puzzles.json", { cache: "no-cache" }).then(r => r.json())).puzzles;
+  } catch (e) { toast("Today's relic couldn't load. Refresh to try again.", 6000); return; }
+  PUZZLE = puzzleFor(todayISO());
+  PUZZLE.dateText = dateLabel(PUZZLE.date);
+  STORE_KEY = "relic-" + PUZZLE.no;
+  state = (data && data.state && data.no === PUZZLE.no && data.state) || load() || freshState();
   shownInsight = state.insight;
-  $("#issue").textContent = `No. ${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.date}`;
+  $("#relicImg").src = PUZZLE.image;
+  $("#issue").textContent = `No. ${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.dateText}`;
   $("#cardHead").textContent = `Exhibit #${PUZZLE.no}`;
   $("#insightNum").textContent = state.insight; tweenInsight();
   $("#fx").innerHTML = Array.from({ length: 22 }, () => `<i class="tw" style="left:${(Math.random() * 100).toFixed(1)}%;top:${(Math.random() * 100).toFixed(1)}%;animation-delay:${(Math.random() * 5).toFixed(2)}s"></i>`).join("");
@@ -1281,8 +1262,35 @@ async function start(data) {
   renderPhase();
   if (state.phase === "done") renderZoomFull();
   if (!state.seenHelp) showHelp();
+  watchMidnight();
 }
-if (window.claude?.hot?.snapshot) window.claude.hot.snapshot(() => ({ state }));
+
+/* ================= Midnight rollover =================
+   At local midnight (or when a sleeping tab wakes on a new day) a new relic may be out. Swap straight to it
+   if the player hasn't started or has finished; otherwise offer it without interrupting their game. */
+function watchMidnight() {
+  const check = async () => {
+    try { PUZZLES = (await fetch("puzzles.json", { cache: "no-cache" }).then(r => r.json())).puzzles; } catch (e) {}
+    const next = puzzleFor(todayISO());
+    if (next.no === PUZZLE.no) return;
+    const idle = state.phase === "done" || (state.phase === "where" && !state.where.guesses.length);
+    if (idle) { location.reload(); return; }
+    const t = $("#toast");
+    t.innerHTML = `A new relic is out. <button class="btn btn-primary" id="newRelic" style="height:30px;margin-left:8px;pointer-events:auto">Play No. ${esc(next.no)}</button>`;
+    t.classList.add("show"); t.style.pointerEvents = "auto"; clearTimeout(toastTimer);
+    $("#newRelic").addEventListener("click", () => location.reload());
+  };
+  const arm = () => {
+    const now = new Date(), mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+    setTimeout(() => { check(); arm(); }, mid - now);
+  };
+  arm();
+  let lastDay = localISO();
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && localISO() !== lastDay) { lastDay = localISO(); check(); }
+  });
+}
+if (window.claude?.hot?.snapshot) window.claude.hot.snapshot(() => ({ state, no: PUZZLE?.no }));
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 </body>

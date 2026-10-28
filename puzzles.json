@@ -1,0 +1,856 @@
+{
+ "puzzles": [
+  {
+   "date": "2026-10-27",
+   "no": "001",
+   "difficulty": 2,
+   "image": "relic.jpg",
+   "zooms": [
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1
+    },
+    {
+     "x": 0.5,
+     "y": 0.52,
+     "s": 1.3
+    },
+    {
+     "x": 0.5,
+     "y": 0.42,
+     "s": 1.9
+    },
+    {
+     "x": 0.49,
+     "y": 0.47,
+     "s": 2.8
+    },
+    {
+     "x": 0.36,
+     "y": 0.57,
+     "s": 4
+    },
+    {
+     "x": 0.6,
+     "y": 0.6,
+     "s": 6
+    }
+   ],
+   "country": "China",
+   "continent": "Asia",
+   "target": [
+    117.18,
+    29.27
+   ],
+   "ringCenter": [
+    112.0,
+    32.0
+   ],
+   "yearLo": 1426,
+   "yearHi": 1435,
+   "tolerance": 30,
+   "fn": "Vessel",
+   "options": [
+    "Export ginger jar made for the Dutch East India Company trade",
+    "Imperial jar with a dragon among clouds, made for the Xuande emperor's court",
+    "Tea-leaf storage jar made for a Japanese tea master",
+    "Funerary urn made for a Joseon Korean scholar-official"
+   ],
+   "answer": 1,
+   "eliminate": [
+    0,
+    3
+   ],
+   "hintText": {
+    "material": "Porcelain, painted in cobalt blue under a clear glaze.",
+    "continent": "Asia. Countries outside it are faded on the map.",
+    "ring": "Made somewhere inside the dashed 1,000 km ring.",
+    "era": "Early Ming dynasty, the era of Zheng He's treasure fleets.",
+    "halve": "The window on the timeline has been cut in half.",
+    "note": "Brushed in imported cobalt, and signed with the name of the reign that made it."
+   },
+   "reveal": {
+    "title": "Jar with dragon",
+    "facts": [
+     [
+      "Culture",
+      "China, Ming dynasty (1368–1644)"
+     ],
+     [
+      "Date",
+      "Xuande mark and period (1426–35)"
+     ],
+     [
+      "Made at",
+      "Imperial kilns of Jingdezhen, Jiangxi province"
+     ],
+     [
+      "Medium",
+      "Porcelain painted with cobalt blue under transparent glaze"
+     ],
+     [
+      "Size",
+      "H. 48.3 cm (19 in.)"
+     ],
+     [
+      "Credit",
+      "The Met, Gift of Robert E. Tod, 1937 (37.191.1)"
+     ]
+    ],
+    "story": [
+     "This jar comes from the short reign of the Xuande emperor, when the imperial kilns at Jingdezhen made some of the finest blue-and-white porcelain ever fired.",
+     "The deep, slightly speckled blue is cobalt brushed onto the raw clay, likely imported from the Middle East, then sealed under a clear glaze. The dragon twisting through clouds was an emblem of the emperor, and the small line of characters near the rim is the reign mark."
+    ],
+    "url": "https://www.metmuseum.org/art/collection/search/39666"
+   },
+   "day": "Tuesday"
+  },
+  {
+   "date": "2026-10-29",
+   "no": "002",
+   "difficulty": 4,
+   "image": "relics/308120.jpg",
+   "zooms": [
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1
+    },
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1.3
+    },
+    {
+     "x": 0.5,
+     "y": 0.52,
+     "s": 1.9
+    },
+    {
+     "x": 0.48,
+     "y": 0.54,
+     "s": 2.8
+    },
+    {
+     "x": 0.47,
+     "y": 0.55,
+     "s": 4
+    },
+    {
+     "x": 0.46,
+     "y": 0.56,
+     "s": 6
+    }
+   ],
+   "country": "Peru",
+   "continent": "South America",
+   "target": [
+    -72.65,
+    -15.84
+   ],
+   "ringCenter": [
+    -70.6,
+    -13.6
+   ],
+   "yearLo": 1460,
+   "yearHi": 1540,
+   "tolerance": 40,
+   "fn": "Textile",
+   "options": [
+    "Wall hanging woven for a Spanish colonial church in Cusco",
+    "Burial shroud wrapped around a Paracas mummy bundle",
+    "Tunic woven for a man living under Inca rule, covered in stars and stylized figures",
+    "Saddle blanket made for a Mapuche horseman"
+   ],
+   "answer": 2,
+   "eliminate": [
+    1,
+    3
+   ],
+   "hintText": {
+    "material": "Camelid hair (alpaca or llama) and cotton, tightly woven.",
+    "continent": "South America. Countries outside it are faded on the map.",
+    "ring": "Woven somewhere inside the dashed 1,000 km ring.",
+    "era": "The last decades of the Inca Empire, up to just after the Spanish arrived.",
+    "halve": "The window on the timeline has been cut in half.",
+    "note": "Made in the highland style named after the town of Chuquibamba."
+   },
+   "reveal": {
+    "title": "Tunic",
+    "facts": [
+     [
+      "Culture",
+      "Inca, Chuquibamba style"
+     ],
+     [
+      "Date",
+      "1460–1540"
+     ],
+     [
+      "Made in",
+      "Southern highlands of Peru (Arequipa region)"
+     ],
+     [
+      "Medium",
+      "Camelid hair, cotton"
+     ],
+     [
+      "Size",
+      "94 × 75.6 cm (37 × 29 3/4 in.)"
+     ],
+     [
+      "Credit",
+      "The Met, Gift of George D. Pratt, 1933 (33.149.100)"
+     ]
+    ],
+    "story": [
+     "Cloth was among the most valued things in the Inca world, traded, taxed and given as a reward. This tunic was woven from alpaca or llama fibre and cotton in the Chuquibamba style of southern Peru.",
+     "Its grid of eight-pointed stars and small stylized figures repeats across the whole garment. It was made in the final decades of the Inca Empire, just before and after the Spanish arrived in the 1530s."
+    ],
+    "url": "https://www.metmuseum.org/art/collection/search/308120"
+   },
+   "day": "Thursday"
+  },
+  {
+   "date": "2026-10-30",
+   "no": "003",
+   "difficulty": 5,
+   "image": "relics/318622.jpg",
+   "zooms": [
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1
+    },
+    {
+     "x": 0.5,
+     "y": 0.48,
+     "s": 1.3
+    },
+    {
+     "x": 0.5,
+     "y": 0.42,
+     "s": 1.9
+    },
+    {
+     "x": 0.5,
+     "y": 0.36,
+     "s": 2.8
+    },
+    {
+     "x": 0.5,
+     "y": 0.26,
+     "s": 4
+    },
+    {
+     "x": 0.45,
+     "y": 0.19,
+     "s": 6
+    }
+   ],
+   "country": "Nigeria",
+   "continent": "Africa",
+   "target": [
+    5.62,
+    6.34
+   ],
+   "ringCenter": [
+    7.8,
+    8.3
+   ],
+   "yearLo": 1500,
+   "yearHi": 1600,
+   "tolerance": 40,
+   "fn": "Adornment",
+   "options": [
+    "Funerary mask placed over the face of a dead king",
+    "Hip pendant worn by the Oba of Benin, portraying his mother, Queen Mother Idia",
+    "Mask worn by a dancer at a Yoruba Gelede festival",
+    "Portrait carved for a Portuguese trader to take home"
+   ],
+   "answer": 1,
+   "eliminate": [
+    2,
+    3
+   ],
+   "hintText": {
+    "material": "Elephant ivory, with iron inlay and brass.",
+    "continent": "Africa. Countries outside it are faded on the map.",
+    "ring": "Carved somewhere inside the dashed 1,000 km ring.",
+    "era": "A royal court at its height, trading with newly arrived Portuguese ships.",
+    "halve": "The window on the timeline has been cut in half.",
+    "note": "The tiny heads around the crown are Portuguese traders, a sign of wealth from across the sea."
+   },
+   "reveal": {
+    "title": "Pendant mask of Ìyọ́bà Idià",
+    "facts": [
+     [
+      "Culture",
+      "Edo peoples, Court of Benin"
+     ],
+     [
+      "Date",
+      "16th century"
+     ],
+     [
+      "Made in",
+      "Benin City, Nigeria"
+     ],
+     [
+      "Medium",
+      "Ivory, iron, brass, coal, traces of iron oxides"
+     ],
+     [
+      "Size",
+      "H. 23.8 cm (9 3/8 in.)"
+     ],
+     [
+      "Credit",
+      "The Met, Michael C. Rockefeller Memorial Collection, Gift of Nelson A. Rockefeller, 1972 (1978.412.323)"
+     ]
+    ],
+    "story": [
+     "This ivory face portrays Idia, mother of Oba Esigie, who ruled the kingdom of Benin in the early 1500s. She is remembered for raising an army and helping her son win his wars, and he created the title of Queen Mother in her honour.",
+     "The Oba wore pendants like this at his hip during ceremonies. Around the crown, carved heads of Portuguese traders alternate with mudfish, linking the king's wealth from overseas trade with Olokun, god of the sea. The two bars on the forehead were once inlaid with iron."
+    ],
+    "url": "https://www.metmuseum.org/art/collection/search/318622"
+   },
+   "day": "Friday"
+  },
+  {
+   "date": "2026-10-31",
+   "no": "004",
+   "difficulty": 6,
+   "image": "relics/24907.jpg",
+   "zooms": [
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1
+    },
+    {
+     "x": 0.58,
+     "y": 0.45,
+     "s": 1.3
+    },
+    {
+     "x": 0.6,
+     "y": 0.38,
+     "s": 1.9
+    },
+    {
+     "x": 0.62,
+     "y": 0.32,
+     "s": 2.8
+    },
+    {
+     "x": 0.61,
+     "y": 0.24,
+     "s": 4
+    },
+    {
+     "x": 0.6,
+     "y": 0.19,
+     "s": 6
+    }
+   ],
+   "country": "India",
+   "continent": "Asia",
+   "target": [
+    78.01,
+    27.18
+   ],
+   "ringCenter": [
+    76.0,
+    24.6
+   ],
+   "yearLo": 1605,
+   "yearHi": 1627,
+   "tolerance": 30,
+   "fn": "Weapon",
+   "options": [
+    "Dagger presented by a Safavid shah of Persia to a visiting envoy",
+    "Ceremonial knife used by a priest at a Hindu temple in Tamil Nadu",
+    "Ottoman sultan's dagger from the Topkapı Palace workshops",
+    "Jeweled dagger made for the court of the Mughal emperor Jahangir"
+   ],
+   "answer": 3,
+   "eliminate": [
+    0,
+    1
+   ],
+   "hintText": {
+    "material": "Steel blade; gold hilt set with rubies and emeralds.",
+    "continent": "Asia. Countries outside it are faded on the map.",
+    "ring": "Made somewhere inside the dashed 1,000 km ring.",
+    "era": "The early 1600s, in an empire founded by descendants of Timur and Genghis Khan.",
+    "halve": "The window on the timeline has been cut in half.",
+    "note": "Gifts like this were handed out by an emperor whose name means 'world-seizer'."
+   },
+   "reveal": {
+    "title": "Dagger with Scabbard",
+    "facts": [
+     [
+      "Culture",
+      "Indian, Mughal"
+     ],
+     [
+      "Date",
+      "1605–27 (reign of Jahangir)"
+     ],
+     [
+      "Made in",
+      "Mughal court workshops, northern India"
+     ],
+     [
+      "Medium",
+      "Steel, iron, gold, rubies, emeralds, glass, wood, textile"
+     ],
+     [
+      "Size",
+      "L. 37.1 cm (14 5/8 in.)"
+     ],
+     [
+      "Credit",
+      "The Met, Harris Brisbane Dick Fund and The Vincent Astor Foundation Gift, 1984 (1984.332)"
+     ]
+    ],
+    "story": [
+     "This dagger was made during the reign of Jahangir, the fourth Mughal emperor, whose court ruled much of the Indian subcontinent from cities like Agra and Lahore.",
+     "Its gold hilt is set with rubies and emeralds in flowering vines. Daggers like this were less for fighting than for display: emperors gave them to nobles as marks of favour, and courtiers wore them tucked into their sashes."
+    ],
+    "url": "https://www.metmuseum.org/art/collection/search/24907"
+   },
+   "day": "Saturday"
+  },
+  {
+   "date": "2026-11-01",
+   "no": "005",
+   "difficulty": 7,
+   "image": "relics/325849.jpg",
+   "zooms": [
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1
+    },
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1.3
+    },
+    {
+     "x": 0.5,
+     "y": 0.48,
+     "s": 1.9
+    },
+    {
+     "x": 0.5,
+     "y": 0.46,
+     "s": 2.8
+    },
+    {
+     "x": 0.47,
+     "y": 0.45,
+     "s": 4
+    },
+    {
+     "x": 0.44,
+     "y": 0.42,
+     "s": 6
+    }
+   ],
+   "country": "Turkey",
+   "continent": "Asia",
+   "target": [
+    35.63,
+    38.85
+   ],
+   "ringCenter": [
+    37.6,
+    37.2
+   ],
+   "yearLo": -2000,
+   "yearHi": -1800,
+   "tolerance": 75,
+   "fn": "Writing",
+   "options": [
+    "Law code issued by King Hammurabi of Babylon",
+    "Temple inventory of offerings to the god Marduk",
+    "School exercise copied by a young scribe in Ur",
+    "Private letter between Assyrian merchants trading tin and textiles"
+   ],
+   "answer": 3,
+   "eliminate": [
+    0,
+    1
+   ],
+   "hintText": {
+    "material": "Sun-dried clay, pressed with a cut reed.",
+    "continent": "Asia. Countries outside it are faded on the map.",
+    "ring": "Found somewhere inside the dashed 1,000 km ring.",
+    "era": "The Middle Bronze Age, around 4,000 years ago.",
+    "halve": "The window on the timeline has been cut in half.",
+    "note": "Its writers were far from home: merchants from the city of Assur running a trading post."
+   },
+   "reveal": {
+    "title": "Cuneiform tablet: private letter",
+    "facts": [
+     [
+      "Culture",
+      "Old Assyrian Trading Colony"
+     ],
+     [
+      "Date",
+      "ca. 20th–19th century BCE"
+     ],
+     [
+      "Found at",
+      "Probably Kültepe (ancient Kanesh), central Anatolia"
+     ],
+     [
+      "Medium",
+      "Clay"
+     ],
+     [
+      "Size",
+      "5.3 × 5 × 2 cm (2 1/8 × 2 × 3/4 in.)"
+     ],
+     [
+      "Credit",
+      "The Met, Gift of Mr. and Mrs. J. J. Klejman, 1966 (66.245.8)"
+     ]
+    ],
+    "story": [
+     "Nearly 4,000 years ago, merchants from Assur, a city on the Tigris in what is now Iraq, ran a trading colony at Kanesh, in central Turkey. They brought tin and woollen textiles by donkey caravan and sent home silver and gold.",
+     "Tens of thousands of their letters have been dug up at Kültepe. This small palm-sized tablet is one of them: a private letter written in cuneiform, the wedge-shaped script pressed into wet clay with a reed."
+    ],
+    "url": "https://www.metmuseum.org/art/collection/search/325849"
+   },
+   "day": "Sunday"
+  },
+  {
+   "date": "2026-11-02",
+   "no": "006",
+   "difficulty": 1,
+   "image": "relics/544227.jpg",
+   "zooms": [
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1
+    },
+    {
+     "x": 0.5,
+     "y": 0.52,
+     "s": 1.3
+    },
+    {
+     "x": 0.55,
+     "y": 0.5,
+     "s": 1.9
+    },
+    {
+     "x": 0.6,
+     "y": 0.48,
+     "s": 2.8
+    },
+    {
+     "x": 0.45,
+     "y": 0.42,
+     "s": 4
+    },
+    {
+     "x": 0.42,
+     "y": 0.4,
+     "s": 6
+    }
+   ],
+   "country": "Egypt",
+   "continent": "Africa",
+   "target": [
+    30.71,
+    27.43
+   ],
+   "ringCenter": [
+    31.6,
+    29.4
+   ],
+   "yearLo": -1961,
+   "yearHi": -1878,
+   "tolerance": 150,
+   "fn": "Funerary",
+   "options": [
+    "Toy hippo played with by a child in a Nile village",
+    "Tomb figure buried with an official to help him in the afterlife",
+    "Temple offering to Taweret, the hippo goddess of childbirth",
+    "Paperweight from a royal scribes' office"
+   ],
+   "answer": 1,
+   "eliminate": [
+    0,
+    3
+   ],
+   "hintText": {
+    "material": "Faience, a glazed ceramic made from crushed quartz, painted with dark outlines.",
+    "continent": "Africa. Countries outside it are faded on the map.",
+    "ring": "Found somewhere inside the dashed 1,000 km ring.",
+    "era": "The Middle Kingdom, the age of the pharaohs named Senwosret.",
+    "halve": "The window on the timeline has been cut in half.",
+    "note": "Found in a tomb. Three of its legs were deliberately broken, and later restored."
+   },
+   "reveal": {
+    "title": "Hippopotamus (\"William\")",
+    "facts": [
+     [
+      "Culture",
+      "Egypt, Middle Kingdom, Dynasty 12"
+     ],
+     [
+      "Date",
+      "ca. 1961–1878 BCE"
+     ],
+     [
+      "Found at",
+      "Meir, Middle Egypt (tomb of the steward Senbi)"
+     ],
+     [
+      "Medium",
+      "Faience"
+     ],
+     [
+      "Size",
+      "L. 20 cm (7 7/8 in.)"
+     ],
+     [
+      "Credit",
+      "The Met, Gift of Edward S. Harkness, 1917 (17.9.1)"
+     ]
+    ],
+    "story": [
+     "Hippos were among the most dangerous animals on the Nile. Placed in a tomb, this one stood for the marshes of the afterlife, with lotus flowers and water plants painted across its body.",
+     "Its legs were broken, probably on purpose, so it could not harm the dead man it was buried with. Today it is the unofficial mascot of The Met, nicknamed William."
+    ],
+    "url": "https://www.metmuseum.org/art/collection/search/544227"
+   },
+   "day": "Monday"
+  },
+  {
+   "date": "2026-11-03",
+   "no": "007",
+   "difficulty": 2,
+   "image": "relics/254864.jpg",
+   "zooms": [
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1
+    },
+    {
+     "x": 0.5,
+     "y": 0.52,
+     "s": 1.3
+    },
+    {
+     "x": 0.5,
+     "y": 0.58,
+     "s": 1.9
+    },
+    {
+     "x": 0.5,
+     "y": 0.6,
+     "s": 2.8
+    },
+    {
+     "x": 0.52,
+     "y": 0.6,
+     "s": 4
+    },
+    {
+     "x": 0.5,
+     "y": 0.62,
+     "s": 6
+    }
+   ],
+   "country": "Greece",
+   "continent": "Europe",
+   "target": [
+    23.73,
+    37.98
+   ],
+   "ringCenter": [
+    22.0,
+    39.8
+   ],
+   "yearLo": -366,
+   "yearHi": -365,
+   "tolerance": 50,
+   "fn": "Vessel",
+   "options": [
+    "Wine jar for a symposium drinking party",
+    "Prize jar of olive oil awarded to a winning runner at the Panathenaic Games",
+    "Funeral urn holding the ashes of an Olympic champion",
+    "Grain jar shipped to a colony in Sicily"
+   ],
+   "answer": 1,
+   "eliminate": [
+    2,
+    3
+   ],
+   "hintText": {
+    "material": "Terracotta, painted in black-figure style.",
+    "continent": "Europe. Countries outside it are faded on the map.",
+    "ring": "Made somewhere inside the dashed 1,000 km ring.",
+    "era": "The Classical period, in the time of Plato.",
+    "halve": "The window on the timeline has been cut in half.",
+    "note": "Filled with oil pressed from the goddess Athena's sacred olive trees."
+   },
+   "reveal": {
+    "title": "Terracotta Panathenaic prize amphora",
+    "facts": [
+     [
+      "Culture",
+      "Greek, Attic"
+     ],
+     [
+      "Date",
+      "366/365 BCE"
+     ],
+     [
+      "Made in",
+      "Athens"
+     ],
+     [
+      "Artist",
+      "Kittos Group"
+     ],
+     [
+      "Medium",
+      "Terracotta"
+     ],
+     [
+      "Size",
+      "H. 86.3 cm with lid (34 in.)"
+     ],
+     [
+      "Credit",
+      "The Met, Fletcher Fund, 1956 (56.171.6a, b)"
+     ]
+    ],
+    "story": [
+     "Every four years Athens held the Great Panathenaia, a festival for the goddess Athena. Winners did not get medals: they got jars like this filled with olive oil from Athena's sacred trees, sometimes dozens at a time.",
+     "By the 300s BCE the old black-figure style was long out of fashion, but prize jars kept it on purpose, as a tradition. This one shows a footrace, and names the official who held office that year, which dates it exactly."
+    ],
+    "url": "https://www.metmuseum.org/art/collection/search/254864"
+   },
+   "day": "Tuesday"
+  },
+  {
+   "date": "2026-11-04",
+   "no": "008",
+   "difficulty": 3,
+   "image": "relics/503045.jpg",
+   "zooms": [
+    {
+     "x": 0.5,
+     "y": 0.5,
+     "s": 1
+    },
+    {
+     "x": 0.5,
+     "y": 0.55,
+     "s": 1.3
+    },
+    {
+     "x": 0.5,
+     "y": 0.6,
+     "s": 1.9
+    },
+    {
+     "x": 0.45,
+     "y": 0.66,
+     "s": 2.8
+    },
+    {
+     "x": 0.42,
+     "y": 0.74,
+     "s": 4
+    },
+    {
+     "x": 0.4,
+     "y": 0.8,
+     "s": 6
+    }
+   ],
+   "country": "Italy",
+   "continent": "Europe",
+   "target": [
+    10.02,
+    45.13
+   ],
+   "ringCenter": [
+    12.2,
+    43.4
+   ],
+   "yearLo": 1693,
+   "yearHi": 1693,
+   "tolerance": 25,
+   "fn": "Instrument",
+   "options": [
+    "Violin made in Cremona by Antonio Stradivari",
+    "Viola da gamba from a Venetian workshop",
+    "Violin made by Jacob Stainer in the Tyrolean Alps",
+    "Lute made for a court musician in Florence"
+   ],
+   "answer": 0,
+   "eliminate": [
+    1,
+    3
+   ],
+   "hintText": {
+    "material": "Maple, spruce and ebony, finished with varnish.",
+    "continent": "Europe. Countries outside it are faded on the map.",
+    "ring": "Made somewhere inside the dashed 1,000 km ring.",
+    "era": "The late Baroque, the age of Corelli and the young Vivaldi.",
+    "halve": "The window on the timeline has been cut in half.",
+    "note": "From the most famous workshop in a small city on the Po river."
+   },
+   "reveal": {
+    "title": "\"Gould\" Violin",
+    "facts": [
+     [
+      "Maker",
+      "Antonio Stradivari (1644–1737)"
+     ],
+     [
+      "Date",
+      "1693"
+     ],
+     [
+      "Made in",
+      "Cremona, Italy"
+     ],
+     [
+      "Medium",
+      "Maple, spruce, ebony"
+     ],
+     [
+      "Size",
+      "H. 59 cm (23 1/4 in.)"
+     ],
+     [
+      "Credit",
+      "The Met, Gift of George Gould, 1955 (55.86a–c)"
+     ]
+    ],
+    "story": [
+     "Antonio Stradivari worked in Cremona, a small city in northern Italy that had been the home of great violin makers since the Amati family in the 1500s.",
+     "He made this violin in 1693, during years when he was experimenting with a longer body shape. Like most old violins it was later refitted with a longer neck for modern playing. It is named after the Gould family, who gave it to The Met."
+    ],
+    "url": "https://www.metmuseum.org/art/collection/search/503045"
+   },
+   "day": "Wednesday"
+  }
+ ]
+}
