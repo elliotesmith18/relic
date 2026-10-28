@@ -52,10 +52,10 @@
    "tolerance": 30,
    "fn": "Vessel",
    "options": [
-    "Export ginger jar made for the Dutch East India Company trade",
-    "Imperial jar with a dragon among clouds, made for the Xuande emperor's court",
-    "Tea-leaf storage jar made for a Japanese tea master",
-    "Funerary urn made for a Joseon Korean scholar-official"
+    "Jar made at Jingdezhen for export to the Timurid court in Persia",
+    "Jar made at Jingdezhen for use in the Xuande emperor's own palace",
+    "Jar made at Jingdezhen as an altar gift for a Tibetan monastery",
+    "Jar made at a Fujian kiln for a wealthy merchant household"
    ],
    "answer": 1,
    "eliminate": [
@@ -158,15 +158,15 @@
    "tolerance": 40,
    "fn": "Textile",
    "options": [
-    "Wall hanging woven for a Spanish colonial church in Cusco",
-    "Burial shroud wrapped around a Paracas mummy bundle",
-    "Tunic woven for a man living under Inca rule, covered in stars and stylized figures",
-    "Saddle blanket made for a Mapuche horseman"
+    "Tunic woven by the Inca state's chosen women for the emperor",
+    "Tunic woven for a mummy bundle buried on the southern coast",
+    "Tunic woven after the conquest for an Inca noble in Cusco",
+    "Tunic woven in the Chuquibamba style for a man under Inca rule"
    ],
-   "answer": 2,
+   "answer": 3,
    "eliminate": [
     1,
-    3
+    2
    ],
    "hintText": {
     "material": "Camelid hair (alpaca or llama) and cotton, tightly woven.",
@@ -264,14 +264,14 @@
    "tolerance": 40,
    "fn": "Adornment",
    "options": [
-    "Funerary mask placed over the face of a dead king",
-    "Hip pendant worn by the Oba of Benin, portraying his mother, Queen Mother Idia",
-    "Mask worn by a dancer at a Yoruba Gelede festival",
-    "Portrait carved for a Portuguese trader to take home"
+    "Ivory hip pendant worn by the Oba, portraying his mother Idia",
+    "Ivory pendant carved in Benin for sale to Portuguese traders",
+    "Ivory face worn by a palace chief to show his rank at court",
+    "Ivory pendant placed on the Oba's ancestral altar after his death"
    ],
-   "answer": 1,
+   "answer": 0,
    "eliminate": [
-    2,
+    1,
     3
    ],
    "hintText": {
@@ -370,15 +370,15 @@
    "tolerance": 30,
    "fn": "Weapon",
    "options": [
-    "Dagger presented by a Safavid shah of Persia to a visiting envoy",
-    "Ceremonial knife used by a priest at a Hindu temple in Tamil Nadu",
-    "Ottoman sultan's dagger from the Topkapı Palace workshops",
-    "Jeweled dagger made for the court of the Mughal emperor Jahangir"
+    "Jeweled dagger made in the Deccan sultanate of Golconda",
+    "Jeweled dagger made for a Rajput prince of Mewar",
+    "Jeweled dagger from the court workshops of Emperor Jahangir",
+    "Jeweled dagger made in Lahore for sale to Persian merchants"
    ],
-   "answer": 3,
+   "answer": 2,
    "eliminate": [
-    0,
-    1
+    1,
+    3
    ],
    "hintText": {
     "material": "Steel blade; gold hilt set with rubies and emeralds.",
@@ -476,15 +476,15 @@
    "tolerance": 75,
    "fn": "Writing",
    "options": [
-    "Law code issued by King Hammurabi of Babylon",
-    "Temple inventory of offerings to the god Marduk",
-    "School exercise copied by a young scribe in Ur",
-    "Private letter between Assyrian merchants trading tin and textiles"
+    "Contract recording a silver loan between two merchants",
+    "Private letter sent between Assyrian merchant families",
+    "Letter from the king of Kanesh to a neighbouring ruler",
+    "School tablet copied by a scribe learning cuneiform"
    ],
-   "answer": 3,
+   "answer": 1,
    "eliminate": [
-    0,
-    1
+    2,
+    3
    ],
    "hintText": {
     "material": "Sun-dried clay, pressed with a cut reed.",
@@ -582,15 +582,15 @@
    "tolerance": 150,
    "fn": "Funerary",
    "options": [
-    "Toy hippo played with by a child in a Nile village",
-    "Tomb figure buried with an official to help him in the afterlife",
-    "Temple offering to Taweret, the hippo goddess of childbirth",
-    "Paperweight from a royal scribes' office"
+    "Figure dedicated at a temple of Taweret, goddess of childbirth",
+    "Figure kept in a nobleman's house to ward off river spirits",
+    "Figure buried in a royal pyramid among the king's grave goods",
+    "Figure placed in an official's tomb to help him in the afterlife"
    ],
-   "answer": 1,
+   "answer": 3,
    "eliminate": [
     0,
-    3
+    1
    ],
    "hintText": {
     "material": "Faience, a glazed ceramic made from crushed quartz, painted with dark outlines.",
@@ -688,12 +688,12 @@
    "tolerance": 50,
    "fn": "Vessel",
    "options": [
-    "Wine jar for a symposium drinking party",
-    "Prize jar of olive oil awarded to a winning runner at the Panathenaic Games",
-    "Funeral urn holding the ashes of an Olympic champion",
-    "Grain jar shipped to a colony in Sicily"
+    "Prize jar of olive oil for a winning runner at the Panathenaic Games",
+    "Prize jar of olive oil for a winning runner at the Olympic Games",
+    "Wine jar made in Athens for export to colonies on the Black Sea",
+    "Grave jar set over the tomb of a famous Athenian athlete"
    ],
-   "answer": 1,
+   "answer": 0,
    "eliminate": [
     2,
     3
@@ -798,14 +798,14 @@
    "tolerance": 25,
    "fn": "Instrument",
    "options": [
-    "Violin made in Cremona by Antonio Stradivari",
-    "Viola da gamba from a Venetian workshop",
-    "Violin made by Jacob Stainer in the Tyrolean Alps",
-    "Lute made for a court musician in Florence"
+    "Violin made by Nicolò Amati, Stradivari's likely teacher",
+    "Violin made by Giuseppe Guarneri in the Guarneri workshop",
+    "Violin made by Antonio Stradivari in his own workshop",
+    "Viola made by Stradivari for the Medici court in Florence"
    ],
-   "answer": 0,
+   "answer": 2,
    "eliminate": [
-    1,
+    0,
     3
    ],
    "hintText": {
