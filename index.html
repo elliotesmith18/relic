@@ -1225,8 +1225,8 @@ function commitWhat() {
 /* ================= Global scores (Supabase) =================
    Each finished first play posts one row (puzzle, anonymous player id, score). Raw rows aren't readable;
    score_dist() returns only counts per score. Leave these blank and the score sheet says it isn't connected. */
-const SUPABASE_URL = "";
-const SUPABASE_KEY = "";   // the project's public "anon" key, meant to be used in browsers
+const SUPABASE_URL = "https://egbslxashosoijayytrm.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnYnNseGFzaG9zb2lqYXl5dHJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxOTM3MjIsImV4cCI6MjEwODc2OTcyMn0.5Rge7-oRmpoNxad_xGv-D2uWp7BdrFRMhrW1H3s8_OI";   // the project's public "anon" key, meant to be used in browsers
 const SCORE_MAX = 130, BIN = 10;
 function playerId() {
   try {
@@ -1240,15 +1240,18 @@ function sb(path, body, prefer) {
     method: "POST",
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", ...(prefer ? { Prefer: prefer } : {}) },
     body: JSON.stringify(body)
-  }).then(r => { if (!r.ok) throw new Error(r.status); return r.status === 204 ? null : r.json(); });
+  }).then(r => {
+    if (!r.ok) throw Object.assign(new Error(r.status), { status: r.status });
+    return r.status === 201 || r.status === 204 ? null : r.json();
+  });
 }
 async function submitScore() {
   if (!SUPABASE_URL || state.practice || state.submitted) return;
   const id = playerId(); if (!id) return;
-  try {
-    await sb("scores?on_conflict=puzzle_no,player_id", { puzzle_no: PUZZLE.no, player_id: id, score: score().total }, "resolution=ignore-duplicates,return=minimal");
-    state.submitted = true; save();
-  } catch (e) {}
+  // Plain insert: the table's unique (puzzle, player) key turns a repeat into a 409, which counts as already saved.
+  try { await sb("scores", { puzzle_no: PUZZLE.no, player_id: id, score: score().total }, "return=minimal"); state.submitted = true; }
+  catch (e) { if (e.status === 409) state.submitted = true; }
+  save();
 }
 async function loadDistribution(mine) {
   const box = $("#dist"); if (!box) return;
