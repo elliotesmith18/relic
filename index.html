@@ -383,24 +383,27 @@ function todayISO() {
 function puzzleFor(iso) { return [...PUZZLES].reverse().find(p => p.date <= iso) || PUZZLES[0]; }
 function dateLabel(iso) { return new Date(iso + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
 const CATEGORIES = ["Weapon", "Vessel", "Adornment", "Ritual", "Tool", "Currency", "Writing", "Instrument", "Textile", "Funerary", "Toy / Game", "Furniture"];
-const COST = { where: 10, when: 10, fn: 8, id: 12, idDiscount: 8 };
+// Only misses cost Insight; a close miss (within 1,000 km, or a "close" year) costs half.
+const COST = { where: 6, when: 5, fn: 4, id: 6 };
+const FREE_HINTS = 2, FLOOR = 10;
+const half = c => Math.ceil(c / 2);
 const HINTS = {
   where: [
-    { id: "zoom", label: "Zoom out", price: 6, repeat: true },
-    { id: "material", label: "Material", price: 10 },
-    { id: "continent", label: "Continent", price: 15 },
-    { id: "ring", label: "1,000 km ring", price: 12 }
+    { id: "zoom", label: "Zoom out", price: 4, repeat: true },
+    { id: "material", label: "Material", price: 6 },
+    { id: "continent", label: "Continent", price: 8 },
+    { id: "ring", label: "1,000 km ring", price: 8 }
   ],
   when: [
-    { id: "zoom", label: "Zoom out", price: 6, repeat: true },
-    { id: "material", label: "Material", price: 10 },
-    { id: "era", label: "Era name", price: 15 },
-    { id: "halve", label: "Halve window", price: 20 }
+    { id: "zoom", label: "Zoom out", price: 4, repeat: true },
+    { id: "material", label: "Material", price: 6 },
+    { id: "era", label: "Era name", price: 8 },
+    { id: "halve", label: "Halve window", price: 10 }
   ],
   what: [
-    { id: "zoom", label: "Zoom out", price: 6, repeat: true },
-    { id: "note", label: "Curator's note", price: 15 },
-    { id: "elim", label: "Remove 2", price: 10, needsStep: "id" }
+    { id: "zoom", label: "Zoom out", price: 4, repeat: true },
+    { id: "note", label: "Curator's note", price: 8 },
+    { id: "elim", label: "Remove 2", price: 6, needsStep: "id" }
   ]
 };
 const NOTE_LABEL = { material: "Material", continent: "Continent", ring: "Map ring", era: "Era", halve: "Timeline", note: "Curator's note" };
@@ -454,7 +457,7 @@ function freshState() {
     where: { guesses: [], solved: false },
     when: { guesses: [], lo: -3000, hi: 2025, cur: 1000, solved: false },
     what: { step: "fn", fnWrong: [], fnSolved: false, idWrong: [], elim: false, solved: false },
-    used: {}, freeHint: true, notes: [], momentum: {}, seenHelp: false
+    used: {}, freeHints: FREE_HINTS, notes: [], momentum: {}, seenHelp: false
   };
 }
 let state;
@@ -500,7 +503,7 @@ function spend(cost) {
   floater("−" + paid, "minus");
   if (state.insight <= 0) {
     state.insight = 0; state.bankrupt = true;
-    toast("Out of Insight. Keep going for free, but today's score is 0.", 3200);
+    toast(`Out of Insight. Keep going for free; you'll still score ${FLOOR}.`, 3200);
   }
   tweenInsight();
   return paid;
@@ -889,23 +892,23 @@ function renderStepper(ripple) {
 }
 
 /* ================= Hints + notes ================= */
-function hintPrice(h) { return state.bankrupt || state.freeHint ? 0 : h.price; }
+function hintPrice(h) { return state.bankrupt || state.freeHints > 0 ? 0 : h.price; }
 function renderHints() {
   const inBar = state.phase === "where", box = inBar ? $("#barHints") : $("#hintBox");
   if (!inBar) $("#hintBox").innerHTML = "";
   if (!box || state.phase === "done") return;
-  const free = state.freeHint && !state.bankrupt;
+  const free = state.freeHints > 0 && !state.bankrupt;
   const btns = HINTS[state.phase].map(h => {
     const done = !h.repeat && state.used[h.id];
     const blocked = (h.id === "zoom" && state.zoom === 0) || (h.needsStep && state.what.step !== h.needsStep);
     const p = hintPrice(h);
     return `<button class="hint" data-h="${h.id}" ${done || blocked ? "disabled" : ""}><span>${h.label}</span><span class="p ${p === 0 ? "free" : ""}">${done ? "used" : p === 0 ? "free" : "−" + p}</span></button>`;
   }).join("");
-  box.innerHTML = inBar ? btns : `<div class="section-label"><span>Hints</span>${free ? '<span class="free-badge">First hint free</span>' : ""}</div><div class="hints">${btns}</div>`;
+  box.innerHTML = inBar ? btns : `<div class="section-label"><span>Hints</span>${free ? `<span class="free-badge">${state.freeHints} free</span>` : ""}</div><div class="hints">${btns}</div>`;
   box.querySelectorAll(".hint").forEach(b => b.addEventListener("click", () => useHint(b.dataset.h)));
 }
 function notesHtml() {
-  const banner = state.bankrupt && state.phase !== "done" ? `<div class="broke-banner">Out of Insight. Guesses and hints are free now, but today's score is 0.</div>` : "";
+  const banner = state.bankrupt && state.phase !== "done" ? `<div class="broke-banner">Out of Insight. Guesses and hints are free now, and you'll still score ${FLOOR}.</div>` : "";
   return banner + state.notes.map(k => `<div class="note"><span class="k">${NOTE_LABEL[k]}</span>${esc(PUZZLE.hintText[k])}</div>`).join("");
 }
 function renderNotes() {
@@ -915,7 +918,7 @@ function renderNotes() {
 function useHint(id) {
   const h = HINTS[state.phase].find(x => x.id === id); if (!h) return;
   const p = hintPrice(h);
-  if (!state.bankrupt) state.freeHint = false;
+  if (!state.bankrupt && state.freeHints > 0) state.freeHints--;
   spend(p); state.hintsUsed++;
   if (id === "zoom") { zoomOut(); }
   else {
@@ -973,14 +976,14 @@ function drawStatus() {
   if (state.where.solved) {
     st.innerHTML = `<span class="heat-chip" style="background:var(--mint)">FOUND</span><div class="wb-prompt"><span class="t">${esc(PUZZLE.country)}</span><span class="s">Zooming in...</span></div>`;
   } else if (selectedCountry) {
-    st.innerHTML = `<button class="btn btn-primary pulse" id="whereBtn">Guess ${esc(selectedCountry)}${state.bankrupt ? "" : `<span class="cost">−${COST.where}</span>`}</button><button class="btn x" id="clearSel" aria-label="Clear selection">✕</button>`;
+    st.innerHTML = `<button class="btn btn-primary pulse" id="whereBtn">Guess ${esc(selectedCountry)}</button><button class="btn x" id="clearSel" aria-label="Clear selection">✕</button>`;
     $("#whereBtn").addEventListener("click", commitWhere);
     $("#clearSel").addEventListener("click", () => { selectedCountry = null; drawStatus(); requestRender(); });
   } else if (last) {
     st.innerHTML = `<span class="heat-chip" style="background:${heat(last.pct)}">${last.pct}%</span>
       <div class="wb-prompt"><span class="t">${esc(last.name)} · ${fmtKm(last.km)} <span class="arrow" style="transform:rotate(${last.dir}deg)">↑</span></span><span class="s">Guess ${gs.length} · tap another country</span></div>`;
   } else {
-    st.innerHTML = `<div class="wb-prompt"><span class="t">Where was it made?</span><span class="s">Tap a country, then tap again to guess · −${COST.where}</span></div>`;
+    st.innerHTML = `<div class="wb-prompt"><span class="t">Where was it made?</span><span class="s">Tap a country, then tap again to guess · misses −${COST.where}</span></div>`;
   }
 }
 function openSuggest(q) {
@@ -1013,9 +1016,9 @@ function commitWhere() {
   if (!name || state.phase !== "where") return;
   if (state.where.guesses.some(g => g.name === name)) { toast(`You already guessed ${name}`); return; }
   const o = map.byName.get(name.toLowerCase());
-  spend(COST.where);
   const correct = name === PUZZLE.country;
   const km = correct ? 0 : d3.geoDistance(o.centroid, PUZZLE.target) * R_KM;
+  if (!correct) spend(km <= 1000 ? half(COST.where) : COST.where);
   const pct = correct ? 100 : Math.max(0, Math.round((1 - km / (Math.PI * R_KM)) * 100));
   state.where.guesses.push({ name, km, pct, dir: correct ? 0 : bearing(o.centroid, PUZZLE.target), correct });
   selectedCountry = null;
@@ -1059,7 +1062,7 @@ function viewTarget() {
 }
 function renderWhen() {
   $("#phaseBody").innerHTML = `<div class="phase-enter" style="display:flex;flex-direction:column;gap:12px">
-    <div class="phase-head"><h2>When was it made?</h2><p>Slide to a year. Within <b>±${PUZZLE.tolerance} years</b> solves it. Each guess costs <b>${COST.when}</b>, and the yellow window shrinks as you learn.</p></div>
+    <div class="phase-head"><h2>When was it made?</h2><p>Slide to a year. Within <b>±${PUZZLE.tolerance} years</b> solves it. A miss costs <b>${COST.when}</b> (half if close), and the yellow window shrinks as you learn.</p></div>
     <div class="yearbox">
       <span class="yearval" id="yearVal"></span>
       <span class="era" role="group" aria-label="Era"><button id="eraBce">BCE</button><button id="eraCe">CE</button></span>
@@ -1070,7 +1073,7 @@ function renderWhen() {
       <div class="tl-handle" id="tlHandle" tabindex="0" role="slider" aria-label="Year" aria-valuemin="${TL_MIN}" aria-valuemax="${TL_MAX}"></div>
     </div>
     <div class="nudges">${[-100, -10, -1, 1, 10, 100].map(n => `<button data-n="${n}">${n > 0 ? "+" : "−"}${Math.abs(n)}</button>`).join("")}</div>
-    <button class="btn btn-primary" id="whenBtn">Guess this year<span class="cost">−${COST.when}</span></button>
+    <button class="btn btn-primary" id="whenBtn">Guess this year</button>
     <ul class="glist" id="wlist"></ul></div>`;
   [tl.vLo, tl.vHi] = viewTarget();
   const el = $("#tl");
@@ -1102,7 +1105,7 @@ function setYear(v, snap) {
   yv.textContent = Math.abs(v);
   $("#eraBce").classList.toggle("on", v < 0); $("#eraCe").classList.toggle("on", v > 0);
   $("#tlHandle").setAttribute("aria-valuenow", v); $("#tlHandle").setAttribute("aria-valuetext", fmtYear(v));
-  const b = $("#whenBtn"); if (b) b.innerHTML = `Guess <span class="num">${fmtYear(v)}</span>${state.bankrupt ? "" : `<span class="cost">−${COST.when}</span>`}`;
+  const b = $("#whenBtn"); if (b) b.innerHTML = `Guess <span class="num">${fmtYear(v)}</span>`;
   tlPlaceHandle();
 }
 const pctX = v => ((v - tl.vLo) / (tl.vHi - tl.vLo)) * 100;
@@ -1140,7 +1143,6 @@ function tlRefresh(animate) {
 function commitWhen() {
   const y = state.when.cur;
   if (state.when.guesses.some(g => g.y === y)) { shake($("#whenBtn")); toast("You already tried that year"); return; }
-  spend(COST.when);
   const { yearLo, yearHi, tolerance: tol } = PUZZLE;
   const dist = y < yearLo ? yearLo - y : y > yearHi ? y - yearHi : 0;
   const hit = dist <= tol;
@@ -1148,6 +1150,7 @@ function commitWhen() {
   const dir = hit ? "hit" : y < yearLo ? "later" : "earlier";
   state.when.guesses.push({ y, band, dir });
   if (!hit) {
+    spend(band === "close" ? half(COST.when) : COST.when);
     if (dir === "later") state.when.lo = Math.max(state.when.lo, y + 1); else state.when.hi = Math.min(state.when.hi, y - 1);
     state.when.cur = Math.round((state.when.lo + state.when.hi) / 2);
     zoomOut();
@@ -1174,29 +1177,27 @@ function renderWhat() {
   $("#phaseBody").innerHTML = `<div class="phase-enter" style="display:flex;flex-direction:column;gap:12px" id="whatWrap"></div>`;
   renderWhatBody();
 }
-function idCost() { return state.what.fnWrong.length === 0 ? COST.idDiscount : COST.id; }
 function renderWhatBody() {
   const w = state.what, wrap = $("#whatWrap"); if (!wrap) return;
   whatSel = null;
   if (w.step === "fn") {
-    wrap.innerHTML = `<div class="phase-head"><h2>What was it for?</h2><p>First, its function. Each guess costs <b>${COST.fn}</b>. Right on the first try discounts the final question.</p></div>
+    wrap.innerHTML = `<div class="phase-head"><h2>What was it for?</h2><p>First, its function. A wrong guess costs <b>${COST.fn}</b>.</p></div>
       <div class="cats">${CATEGORIES.map(c => `<button class="cat ${w.fnWrong.includes(c) ? "wrong" : ""}" data-c="${esc(c)}" ${w.fnWrong.includes(c) ? "disabled" : ""}>${esc(c)}</button>`).join("")}</div>
-      <button class="btn btn-primary" id="whatBtn" disabled>Choose a function<span class="cost">−${COST.fn}</span></button>`;
+      <button class="btn btn-primary" id="whatBtn" disabled>Choose a function</button>`;
     wrap.querySelectorAll(".cat").forEach(b => b.addEventListener("click", () => {
       wrap.querySelectorAll(".cat").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); whatSel = b.dataset.c;
-      $("#whatBtn").disabled = false; $("#whatBtn").innerHTML = `Guess ${esc(whatSel)}${state.bankrupt ? "" : `<span class="cost">−${COST.fn}</span>`}`;
+      $("#whatBtn").disabled = false; $("#whatBtn").innerHTML = `Guess ${esc(whatSel)}`;
     }));
   } else {
-    const c = idCost();
-    wrap.innerHTML = `<div class="phase-head"><h2>Which object is it?</h2><p>It's a <b>${esc(PUZZLE.fn.toLowerCase())}</b>. Now pick the right description. Each guess costs <b>${c}</b>${c < COST.id ? " (first-try discount)" : ""}.</p></div>
+    wrap.innerHTML = `<div class="phase-head"><h2>Which object is it?</h2><p>It's a <b>${esc(PUZZLE.fn.toLowerCase())}</b>. Now pick the right description. A wrong guess costs <b>${COST.id}</b>.</p></div>
       <div class="opts">${PUZZLE.options.map((o, i) => {
         const gone = w.elim && PUZZLE.eliminate.includes(i), wrong = w.idWrong.includes(i), right = w.solved && i === PUZZLE.answer;
         return `<button class="opt ${gone ? "gone" : ""} ${wrong ? "wrong" : ""} ${right ? "right" : ""}" data-i="${i}" ${gone || wrong || w.solved ? "disabled" : ""}>${esc(o)}</button>`;
       }).join("")}</div>
-      <button class="btn btn-primary" id="whatBtn" disabled>Choose a description<span class="cost">−${c}</span></button>`;
+      <button class="btn btn-primary" id="whatBtn" disabled>Choose a description</button>`;
     wrap.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
       wrap.querySelectorAll(".opt").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); whatSel = +b.dataset.i;
-      $("#whatBtn").disabled = false; $("#whatBtn").innerHTML = `Lock it in${state.bankrupt ? "" : `<span class="cost">−${c}</span>`}`;
+      $("#whatBtn").disabled = false; $("#whatBtn").innerHTML = `Lock it in`;
     }));
   }
   $("#whatBtn").addEventListener("click", commitWhat);
@@ -1204,22 +1205,20 @@ function renderWhatBody() {
 function commitWhat() {
   const w = state.what; if (whatSel === null) return;
   if (w.step === "fn") {
-    spend(COST.fn);
     if (whatSel === PUZZLE.fn) {
       w.fnSolved = true; w.step = "id";
-      toast(w.fnWrong.length === 0 ? `Yes, a ${PUZZLE.fn.toLowerCase()}. The next guess is discounted.` : `Yes, a ${PUZZLE.fn.toLowerCase()}`);
+      toast(`Yes, a ${PUZZLE.fn.toLowerCase()}`);
       renderStepper("what"); renderWhatBody(); renderHints();
     } else {
-      w.fnWrong.push(whatSel); zoomOut(); toast(`Not a ${whatSel.toLowerCase()}`); renderWhatBody();
+      spend(COST.fn); w.fnWrong.push(whatSel); zoomOut(); toast(`Not a ${whatSel.toLowerCase()}`); renderWhatBody();
     }
   } else {
-    spend(idCost());
     if (whatSel === PUZZLE.answer) {
       w.solved = true; renderWhatBody();
       finishPhase("what", "done", w.fnWrong.length + w.idWrong.length + 2);
       return;
     }
-    w.idWrong.push(whatSel); zoomOut(); toast("Not that one"); renderWhatBody();
+    spend(COST.id); w.idWrong.push(whatSel); zoomOut(); toast("Not that one"); renderWhatBody();
   }
   renderStepper(); save();
 }
@@ -1249,6 +1248,7 @@ function sb(path, body, prefer) {
   });
 }
 async function submitScore() {
+  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;   // local test plays never reach the real scores
   if (!SUPABASE_URL || state.practice || state.submitted) return;
   const id = playerId(); if (!id) return;
   // Plain insert: the table's unique (puzzle, player) key turns a repeat into a 409, which counts as already saved.
@@ -1295,13 +1295,13 @@ function renderDistribution(rows, mine) {
 
 /* ================= Done / reveal ================= */
 function score() {
-  if (state.bankrupt) return { total: 0, parts: [] };
+  if (state.bankrupt) return { total: FLOOR, parts: [["Out of Insight: floor score", FLOOR]] };
   const parts = [["Insight left", state.insight], [`Zoom bonus (${state.zoom} unrevealed × 3)`, state.zoom * 3], ["Find-spot bonus", 5]];
   return { total: parts.reduce((a, p) => a + p[1], 0), parts };
 }
 function rank(t) {
   if (state.bankrupt) return ["🧭", "Excavated with help"];
-  return t >= 90 ? ["🏛️", "Curator"] : t >= 70 ? ["⛏️", "Archaeologist"] : t >= 50 ? ["📜", "Scholar"] : t >= 25 ? ["🎒", "Tourist"] : ["🕯️", "Lost in the Archives"];
+  return t >= 105 ? ["🏛️", "Curator"] : t >= 85 ? ["⛏️", "Archaeologist"] : t >= 65 ? ["📜", "Scholar"] : t >= 40 ? ["🎒", "Tourist"] : ["🕯️", "Lost in the Archives"];
 }
 function shareText() {
   const s = score(), [emo] = rank(s.total);
@@ -1352,15 +1352,15 @@ function modal(html, onClose) {
   return close;
 }
 function showHelp() {
-  const rows = [["Where guess", COST.where], ["When guess", COST.when], ["What: function", COST.fn], ["What: identity", `${COST.id} (${COST.idDiscount} after a first-try function)`]];
+  const rows = [["Wrong country", `${COST.where} (${half(COST.where)} within 1,000 km)`], ["Wrong year", `${COST.when} (${half(COST.when)} if close)`], ["Wrong function", COST.fn], ["Wrong object", COST.id]];
   const close = modal(`<div class="sheet box" role="dialog" aria-modal="true" aria-label="How to play">
     <div class="eyebrow">How to play</div><h2>Find where, when and what</h2>
     <p>Each day brings one real object from The Met's open-access collection, shown as a tight close-up.</p>
     <p><b>1. Where.</b> Drag to spin the globe, and scroll or pinch to zoom. Tap a country, then tap it again (or press Guess) to lock it in. Misses light up by how close they were. <b>2. When.</b> Find the right country and the map zooms in. Slide the timeline to the year it was made. <b>3. What.</b> Pick its function, then which object it is.</p>
-    <p>You start with <b>100 Insight</b>. Guesses and hints spend it. Every miss pulls the photo back one step. Whatever Insight is left becomes your score.</p>
+    <p>You start with <b>100 Insight</b>. Right answers are free; only misses and hints spend it. Every miss pulls the photo back one step. Whatever Insight is left becomes your score.</p>
     <table class="price-table">${rows.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join("")}</table>
-    <p><b>Hints.</b> Your first hint of the game is free. After that, hints cost Insight. <b>First try.</b> Solve Where or When on your first guess for +5 Insight.</p>
-    <p><b>Bonuses.</b> +3 for every zoom level you never revealed, and +5 for the find-spot. Run out of Insight and you can keep playing for free, but the score drops to 0.</p>
+    <p><b>Hints.</b> Your first ${FREE_HINTS} hints of the game are free. After that, hints cost Insight. <b>First try.</b> Solve Where or When on your first guess for +5 Insight.</p>
+    <p><b>Bonuses.</b> +3 for every zoom level you never revealed, and +5 for the find-spot. Run out of Insight and you can keep playing for free, and still score ${FLOOR}.</p>
     <div class="row-btns"><button class="btn btn-primary" id="startBtn">${state.where.guesses.length ? "Back to the dig" : "Start digging"}</button></div>
     <div class="site-links"><a href="${HOME_URL}">More games</a><a href="${HOME_URL}privacy.html">Privacy</a><button type="button" data-consent-open>Cookie settings</button></div></div>`,
     () => { if (!state.seenHelp) { state.seenHelp = true; save(); } });
@@ -1421,7 +1421,7 @@ async function start(data) {
   PUZZLE.dateText = dateLabel(PUZZLE.date);
   STORE_KEY = "relic-" + PUZZLE.no;
   state = (data && data.state && data.no === PUZZLE.no && data.state) || load() || freshState();
-  if (state.freeHint === undefined) { state.freeHint = !state.hintsUsed; delete state.free; }
+  if (state.freeHints === undefined) { state.freeHints = Math.max(0, FREE_HINTS - state.hintsUsed); delete state.freeHint; delete state.free; }
   shownInsight = state.insight;
   $("#relicImg").src = PUZZLE.image;
   $("#issue").textContent = `No. ${PUZZLE.no} · ${PUZZLE.day} ${PUZZLE.dateText}`;
